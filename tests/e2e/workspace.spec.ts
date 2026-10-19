@@ -58,9 +58,10 @@ test.describe('workspace shell', () => {
       'my-plugin/includes/a.php',
     );
     await expect(workspace.tab('a.php')).toBeVisible();
+    await expect(workspace.monaco).toBeVisible();
     await expect(
       page.getByRole('textbox', { name: 'Editor: my-plugin/includes/a.php' }),
-    ).toBeVisible();
+    ).toBeAttached();
   });
 
   test('TC-WS-008 the tree works with the keyboard alone', async ({ page, workspace }) => {
@@ -112,8 +113,8 @@ test.describe('workspace shell', () => {
     page,
     workspace,
   }) => {
-    await workspace.openFile('readme.txt');
-    await workspace.editor.click();
+    await workspace.openInEditor('readme.txt');
+    await workspace.focusEditorEnd();
     await page.keyboard.type(' edited');
 
     await expect(workspace.tab('readme.txt, unsaved')).toBeVisible();
@@ -149,8 +150,7 @@ test.describe('workspace shell', () => {
     workspace,
     a11y,
   }) => {
-    await workspace.openFile('readme.txt');
-    await expect(workspace.editor).toBeVisible();
+    await workspace.openInEditor('readme.txt');
     await a11y.check();
 
     await workspace.openPalette();

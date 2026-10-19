@@ -267,3 +267,33 @@ describe('workspace store: tabs', () => {
     expect(store.getState().isPaletteOpen).toBe(false);
   });
 });
+
+describe('workspace store: editor requests', () => {
+  it('TC-ED-023 holds a format request with a new serial each time until it is cleared', () => {
+    const store = makeStore();
+
+    store.getState().requestEditorAction({ kind: 'format' });
+    const first = store.getState().editorRequest;
+    store.getState().requestEditorAction({ kind: 'format' });
+    const second = store.getState().editorRequest;
+
+    expect(first).toMatchObject({ kind: 'format' });
+    expect(second).toMatchObject({ kind: 'format' });
+    expect(second?.serial).toBeGreaterThan(first?.serial ?? Number.NaN);
+    store.getState().clearEditorRequest();
+    expect(store.getState().editorRequest).toBeNull();
+  });
+
+  it('TC-ED-023a the Format document command does nothing without an open file', async () => {
+    const { WORKSPACE_COMMANDS } = await import('@/features/workspace');
+    const format = WORKSPACE_COMMANDS.find((command) => command.id === 'editor.format');
+    const store = makeStore();
+
+    format?.run(store.getState());
+    expect(store.getState().editorRequest).toBeNull();
+
+    store.getState().openFile('plugin/plugin.php');
+    format?.run(store.getState());
+    expect(store.getState().editorRequest).toMatchObject({ kind: 'format' });
+  });
+});

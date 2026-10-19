@@ -15,13 +15,18 @@ export interface WorkspaceProps {
   sidebar?: ReactNode;
   /** What the preview area shows (Phase 2: the Playground spike panel). */
   preview?: ReactNode;
+  /**
+   * The code editor for the active file (Phase 3: Monaco from `features/editor`). Without it the editor area
+   * falls back to a plain text area, which is what component tests render.
+   */
+  editor?: ReactNode;
 }
 
 /**
  * The IDE layout: header, file tree, editor column (tabs, editor, bottom panel) and preview, split by
  * keyboard-operable splitters whose sizes are remembered per browser.
  */
-export function Workspace({ sidebar, preview }: WorkspaceProps): React.JSX.Element {
+export function Workspace({ sidebar, preview, editor }: WorkspaceProps): React.JSX.Element {
   const api = useWorkspaceStoreApi();
   const layout = useWorkspaceStore((state) => state.layout);
   useShortcuts();
@@ -74,7 +79,7 @@ export function Workspace({ sidebar, preview }: WorkspaceProps): React.JSX.Eleme
         <div className={styles.column}>
           <section className={styles.editor} aria-label="Editor">
             <TabBar />
-            <EditorArea />
+            <EditorArea editor={editor} />
           </section>
           {layout.visible.bottom ? (
             <>

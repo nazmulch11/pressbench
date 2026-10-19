@@ -63,6 +63,17 @@ export const WORKSPACE_COMMANDS: readonly Command[] = [
     },
   },
   {
+    id: 'editor.format',
+    title: 'Format document',
+    keywords: ['prettier', 'beautify', 'indent'],
+    shortcut: 'Shift+Alt+F',
+    run: (state: WorkspaceState): void => {
+      if (state.activeTab !== null) {
+        state.requestEditorAction({ kind: 'format' });
+      }
+    },
+  },
+  {
     id: 'tab.close',
     title: 'Close tab',
     shortcut: 'Ctrl/Cmd+W',

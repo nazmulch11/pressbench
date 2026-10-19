@@ -1,24 +1,17 @@
+import type { ReactNode } from 'react';
+
 import { useWorkspaceStore, useWorkspaceStoreApi } from '@/stores';
 
 import styles from './Workspace.module.css';
 
-/**
- * Phase 2 stand-in for the editor: a plain text area over the active file. Monaco replaces it in Phase 3; the
- * draft and save flow stays the same.
- */
-export function EditorArea(): React.JSX.Element {
-  const api = useWorkspaceStoreApi();
+export interface EditorAreaProps {
+  /** The editor over the active file. When absent, a plain text area is used (component tests, no Monaco). */
+  editor?: ReactNode;
+}
+
+/** The editor column below the tabs: an empty state, or the path line and the editor of the active file. */
+export function EditorArea({ editor }: EditorAreaProps): React.JSX.Element {
   const activeTab = useWorkspaceStore((state) => state.activeTab);
-  const draft = useWorkspaceStore((state) =>
-    state.activeTab === null ? undefined : state.drafts[state.activeTab],
-  );
-  const saved = useWorkspaceStore((state) => {
-    if (state.activeTab === null) {
-      return '';
-    }
-    const content = state.fs.read(state.activeTab);
-    return content.ok ? content.value : '';
-  });
 
   if (activeTab === null) {
     return (
@@ -32,16 +25,29 @@ export function EditorArea(): React.JSX.Element {
   return (
     <div className={styles.editorWrap}>
       <p className={styles.path}>{activeTab}</p>
-      <textarea
-        key={activeTab}
-        className={styles.textarea}
-        aria-label={`Editor: ${activeTab}`}
-        spellCheck={false}
-        value={draft ?? saved}
-        onChange={(event) => {
-          api.getState().setDraft(activeTab, event.target.value);
-        }}
-      />
+      {editor ?? <PlainTextEditor path={activeTab} />}
     </div>
+  );
+}
+
+/** The Phase 2 editor: a text area over the file, with the same draft and save flow as Monaco. */
+function PlainTextEditor({ path }: { path: string }): React.JSX.Element {
+  const api = useWorkspaceStoreApi();
+  const draft = useWorkspaceStore((state) => state.drafts[path]);
+  const saved = useWorkspaceStore((state) => {
+    const content = state.fs.read(path);
+    return content.ok ? content.value : '';
+  });
+  return (
+    <textarea
+      key={path}
+      className={styles.textarea}
+      aria-label={`Editor: ${path}`}
+      spellCheck={false}
+      value={draft ?? saved}
+      onChange={(event) => {
+        api.getState().setDraft(path, event.target.value);
+      }}
+    />
   );
 }

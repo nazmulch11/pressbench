@@ -7,6 +7,31 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Phase 3 editor (`src/features/editor`): Monaco replaces the placeholder text area. It is lazy-loaded (its own
+  `monaco` chunk, requested only once a file is open) and bundled from npm with Vite web workers, no CDN.
+  Highlighting for PHP, JavaScript, TypeScript, JSX/TSX, CSS, SCSS, HTML, JSON and Markdown; the theme follows
+  the system colour scheme and `data-theme`.
+- WordPress completion in PHP files: 3,598 global functions with signatures, summaries and reference links
+  (deprecated ones marked and sorted last), and hook names inside `add_action`, `add_filter`, `do_action`,
+  `apply_filters`, `remove_action` and `remove_filter` (actions and filters separately, triggered by the quote).
+- Hover docs for WordPress functions (signature, parameters, description, developer.wordpress.org link) and for
+  quoted hook names inside hook calls.
+- `npm run generate:wp-data` (`scripts/generate-wp-data.ts` + `scripts/wp-data/`): builds
+  `src/data/wp-functions.json` from `php-stubs/wordpress-stubs` v7.1.2 (downloaded at a pinned tag) and
+  `src/data/wp-hooks.json` from `@wp-hooks/wordpress-core` 1.13.0 (WordPress 7.1). Both files carry a `source`
+  block with the version; unit tests check it.
+- Ctrl/Cmd+S saves from inside Monaco; Ctrl/Cmd+K opens the palette from inside Monaco; Shift+Alt+F and the new
+  "Format document" command format JavaScript, TypeScript, CSS, SCSS and JSON with Prettier (WordPress-style
+  options: tabs, 80 columns, single quotes). PHP shows a notice that formatting comes later.
+- `src/lib/wp-data` (data types and cached loader) and `src/lib/format` (Prettier standalone with lazy plugins).
+  A failed save or format shows its reason under the editor.
+- Workspace store: `requestEditorAction` / `clearEditorRequest` (palette → editor), and `?debug=1` exposes
+  `window.__PRESSBENCH__.workspaceStore`.
+- ADR 0002: a PHP language server cannot run in a web worker today; V2 should try a worker-based parser.
+- Test cases TC-ED-001 to TC-ED-023, all automated: 8 e2e (three browsers, including a real completion list, hook
+  completion, hover, save, format, lazy loading and axe with the editor open), the rest unit and component.
+- Phase 3 test run record (`docs/test-runs/2026-10-20-phase-3.md`).
+
 - Phase 2 workspace shell (`src/features/workspace`): header with the product name and a "Commands" button, a
   resizable layout (sidebar, editor column with tabs and a bottom panel, preview) split by keyboard-operable
   splitters (`role="separator"`, arrow keys, Home, End). Panel sizes and visibility are remembered per browser.
@@ -96,6 +121,18 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Internal
 
+- Dependencies: `monaco-editor` 0.57.0 (MIT, 101 MB unpacked on disk, 4.5 MB / 1.1 MB gzipped in the lazy chunk,
+  Microsoft, last release 2026-09), `@monaco-editor/react` 4.7.0 (MIT, 153 KB, suren-atoyan, last release
+  2025-11), `prettier` 3.9.10 moved to runtime dependencies for in-browser formatting (MIT; only `standalone`
+  plus the babel, estree and postcss plugins are loaded, lazily), and dev-only `@wp-hooks/wordpress-core` 1.13.0
+  (GPL-3.0-or-later, 3.7 MB, John Blackbourn, last release 2026-08) as the hooks source. The WordPress stubs
+  (`php-stubs/wordpress-stubs`, MIT) are downloaded, not installed.
+- Rolldown `codeSplitting` puts `monaco-editor` into a `monaco` chunk with `includeDependenciesRecursively:
+false`; with the default, Vite's preload helper landed in that chunk and the entry preloaded Monaco.
+- ESLint ignores Vite `?worker` imports for `import-x/no-unresolved` and `import-x/default`.
+- The Phase 2 e2e tests that typed into the text area now use the Monaco helpers; Monaco's accessible text box
+  is zero-width, so TC-WS-007 asserts `toBeAttached()` instead of visibility.
+- `App` now takes the store and the editor slot from `main.tsx` instead of creating the store itself.
 - Dependency: `zustand` 5.0.15 (MIT, 95 KB unpacked, about 1 KB gzipped for the vanilla store plus the React
   binding, maintained by pmndrs, last release 2026-08). Chosen in the plan for small, testable stores.
 - The file tree renders flat rows instead of nested `treeitem` / `group` elements: with nesting, axe reported

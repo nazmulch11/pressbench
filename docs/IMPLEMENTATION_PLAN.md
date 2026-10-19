@@ -1,8 +1,8 @@
 # Pressbench implementation plan
 
-> Status: living document. Last reviewed: 2026-10-20. Current phase: **Phase 2 built; exit gate passed locally**
-> (see [Phase 2 test run](test-runs/2026-10-20-phase-2.md)). Phase 0's CI item passed on the first pull request.
-> Phase 3 is next.
+> Status: living document. Last reviewed: 2026-10-20. Current phase: **Phase 3 built; exit gate passed locally**
+> (see [Phase 3 test run](test-runs/2026-10-20-phase-3.md)). Phase 0's CI item passed on the first pull request.
+> Phase 4 is next.
 > Owner: Nazmul. Update this file whenever a phase starts, finishes or changes scope (see [UPDATING.md](UPDATING.md)).
 
 Pressbench is a browser-based IDE for WordPress plugin and theme developers. It runs WordPress inside the browser with
@@ -117,7 +117,7 @@ Tasks:
 7. Add the npm scripts listed in [AGENTS.md](../AGENTS.md#commands) and [TESTING.md](TESTING.md#3-commands):
    `dev`, `build`, `preview`, `lint`, `format`, `format:check`, `typecheck`, `test`, `test:watch`, `test:coverage`,
    `test:integration`, `test:e2e`, `test:e2e:repeat`, `test:e2e:headed`, `test:e2e:ui`, `check`, `docs:check`
-   (`scripts/docs-check/`), and `generate:wp-data` (stub until Phase 3).
+   (`scripts/docs-check/`), and `generate:wp-data` (a stub until Phase 3 implemented it).
 8. Add a logger module (`src/lib/logger`) with levels and a `?debug=1` switch (see [DEBUGGING.md](DEBUGGING.md)).
 9. Add GitHub Actions CI: install, `npm run check`, build, E2E on three browsers with `--repeat-each=3`, upload
    Playwright report as an artifact. The workflow lives in `docs/templates/ci.yml` and is copied to
@@ -228,11 +228,38 @@ Tasks:
 
 Test cases: [test-cases/03-editor.md](test-cases/03-editor.md)
 
+Built 2026-10-20 (branch `feat/editor`). Decisions and leftovers:
+
+- `Workspace` has an `editor` slot like `sidebar` and `preview`; `main.tsx` passes `<CodeEditor />` from
+  `src/features/editor`. Without the slot the workspace keeps its plain text area (component tests). Monaco is
+  `React.lazy` behind the slot and sits in its own `monaco` chunk, so nothing requests it before a file is open.
+- Monaco is bundled from npm (no CDN loader); language workers are Vite `?worker` imports.
+- The generated data is fetched as JSON assets (`src/lib/wp-data`), not imported, so the bytes stay out of the
+  script chunks and TypeScript does not type a megabyte of literal data.
+- `php-stubs/wordpress-stubs` is a Composer package; `scripts/generate-wp-data.ts` downloads the pinned tag
+  (`scripts/wp-data/sources.ts`) into `scripts/.cache/`. `@wp-hooks/wordpress-core` is a dev dependency
+  (GPL-3.0-or-later; the owner should weigh that before choosing a licence, see README).
+- Formatting uses Prettier standalone in `src/lib/format` for JS, JSX, TS, TSX, CSS, SCSS and JSON with
+  WordPress-style options; PHP shows a notice. Bound to Shift+Alt+F and the "Format document" command.
+- Ctrl/Cmd+K and Ctrl/Cmd+S are Monaco actions as well as shell shortcuts, because Monaco swallows Ctrl/Cmd+K
+  as a chord prefix. `Ctrl/Cmd+W` stays as in Phase 2 (browsers may take it first; the close button and the
+  palette are the reliable routes); no extra binding was added.
+- Ctrl/Cmd+S is bound twice on purpose (Monaco action and the shell's window listener for the text area);
+  `saveFile` is idempotent, so one keypress writes once (TC-ED-009).
+- Known gaps, by design for V1: hook completion and hover need the call and the quoted name on one line;
+  renaming the open file disposes its model, so its undo history is lost; the stubs download is checked
+  against a pinned SHA-256 (`scripts/wp-data/sources.ts`).
+- The full Monaco build ships (about 1.1 MB gzipped, lazy). Trimming it to the nine languages with the 0.56+
+  entry points is a Phase 9 budget item.
+- ADR 0002 records the PHP language server spike: nothing runs in a worker today; V2 should try a worker-based
+  parser for outline and syntax errors.
+
 Exit gate:
 
-- [ ] Completion and hover unit-tested against fixtures; E2E checks a real completion list in three browsers
-- [ ] Editor bundle loads lazily; first paint of the app is not blocked by Monaco
-- [ ] Generated data files have a recorded source version
+- [x] Completion and hover unit-tested against fixtures (TC-ED-003 to TC-ED-007, TC-ED-020); E2E checks a real
+      completion list in three browsers (TC-ED-008, TC-ED-011)
+- [x] Editor bundle loads lazily; first paint of the app is not blocked by Monaco (TC-ED-010)
+- [x] Generated data files have a recorded source version (TC-ED-017; `source` block in both files)
 
 ### Phase 4: Runtime and live preview
 
@@ -378,14 +405,14 @@ Update this table whenever test cases are added or automated. CI's `npm run docs
 | Foundation  | 00-foundation.md  | TC-FND | 10            | 1                | 9                |
 | Playground  | 01-playground.md  | TC-PG  | 14            | 0                | 14               |
 | Workspace   | 02-workspace.md   | TC-WS  | 25            | 0                | 25               |
-| Editor      | 03-editor.md      | TC-ED  | 10            | 0                | 0                |
+| Editor      | 03-editor.md      | TC-ED  | 23            | 0                | 23               |
 | Runtime     | 04-runtime.md     | TC-RT  | 9             | 0                | 0                |
 | Scaffolding | 05-scaffolding.md | TC-SC  | 9             | 0                | 0                |
 | Debug panel | 06-debug-panel.md | TC-DBG | 7             | 0                | 0                |
 | Projects    | 07-projects.md    | TC-PRJ | 10            | 1                | 0                |
 | Sharing     | 08-sharing.md     | TC-SH  | 5             | 0                | 0                |
 | Hardening   | 09-hardening.md   | TC-HD  | 7             | 4                | 0                |
-| **Total**   |                   |        | **106**       | **6**            | **48**           |
+| **Total**   |                   |        | **119**       | **6**            | **71**           |
 
 ---
 
@@ -396,7 +423,7 @@ Update this table whenever test cases are added or automated. CI's `npm run docs
 | Playground behaviour differs between browsers (OPFS, memory)        | Features break in one browser                        | Phase 1 spike in all three browsers; E2E on all three for every change                                         |
 | Browser storage cleared by the browser                              | Lost work                                            | Export button, quota warning, cloud sync in V2                                                                 |
 | Playground API changes                                              | Breakage on upgrade                                  | Single wrapper module, pinned versions, upgrade checklist in UPDATING.md                                       |
-| No full PHP language server in the browser                          | Weaker autocomplete                                  | Generated WordPress data in MVP; spike in Phase 3                                                              |
+| No full PHP language server in the browser                          | Weaker autocomplete                                  | Generated WordPress data in MVP; Phase 3 spike recorded in ADR 0002                                            |
 | Flaky E2E tests hide real bugs                                      | False confidence                                     | 3× repeat rule, flake policy in TESTING.md                                                                     |
 | Overlap with my.WordPress.net                                       | Weak positioning                                     | Stay focused on developer jobs: testing, standards, shipping                                                   |
 | Licence not yet chosen; `@wp-playground/client` is GPL-2.0-or-later | A closed licence may conflict with bundling GPL code | `package.json` is `private` / `UNLICENSED` until decided; decide (with legal advice) before any public release |

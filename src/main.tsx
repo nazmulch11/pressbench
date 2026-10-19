@@ -5,8 +5,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { App } from './app/App';
+import { CodeEditor } from './features/editor';
 import { createLogger, initLoggingFromUrl } from './lib/logger';
 import { createWebPlaygroundService } from './lib/playground';
+import { browserLocalStorage, createPreferences } from './lib/storage';
+import { createWorkspaceStore } from './stores';
 
 const logging = initLoggingFromUrl(window.location.search);
 const isDebug = logging.isBufferEnabled;
@@ -21,8 +24,13 @@ const playground = createWebPlaygroundService({
     }
   },
 });
+const store = createWorkspaceStore({ preferences: createPreferences(browserLocalStorage()) });
 if (isDebug) {
-  window.__PRESSBENCH__ = { ...window.__PRESSBENCH__, playgroundService: playground };
+  window.__PRESSBENCH__ = {
+    ...window.__PRESSBENCH__,
+    playgroundService: playground,
+    workspaceStore: store,
+  };
 }
 
 const log = createLogger('ui');
@@ -33,7 +41,7 @@ if (rootElement === null) {
 } else {
   createRoot(rootElement).render(
     <StrictMode>
-      <App playground={playground} />
+      <App playground={playground} store={store} editor={<CodeEditor />} />
     </StrictMode>,
   );
 }

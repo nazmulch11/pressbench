@@ -14,9 +14,9 @@ WordPress Playground (`@wp-playground/client`); the editor is Monaco; the app is
 - Testing: [docs/TESTING.md](docs/TESTING.md) · Debugging: [docs/DEBUGGING.md](docs/DEBUGGING.md)
 - Updating deps, docs and this file: [docs/UPDATING.md](docs/UPDATING.md)
 
-**Current status:** Phase 2 (workspace shell) built on branch `feat/workspace-shell`; its exit gate passed locally
-(see `docs/test-runs/2026-10-20-phase-2.md`). CI is green on GitHub. Phase 3 (editor) is next. Update this line when a
-phase changes.
+**Current status:** Phase 3 (editor) built on branch `feat/editor`; its exit gate passed locally (see
+`docs/test-runs/2026-10-20-phase-3.md`). Phases 0 to 2 are merged into `main`. Phase 4 (runtime and live preview) is
+next. Update this line when a phase changes.
 
 ## Commands
 

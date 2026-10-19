@@ -1,5 +1,6 @@
 import type { LogEntry } from '@/lib/logger';
 import type { PlaygroundService } from '@/lib/playground';
+import type { WorkspaceStore } from '@/stores';
 
 declare global {
   interface Window {
@@ -10,6 +11,8 @@ declare global {
       /** The raw Playground client, once WordPress is ready. */
       playground?: unknown;
       playgroundService?: PlaygroundService;
+      /** The workspace store (files, tabs, drafts), for inspecting state and counting writes in tests. */
+      workspaceStore?: WorkspaceStore;
     };
   }
 }

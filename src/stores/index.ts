@@ -5,6 +5,7 @@ export { LAYOUT_LIMITS, PANEL_NAMES } from './layout';
 export type { LayoutSizes, LayoutState, LayoutVisibility, PanelName } from './layout';
 export { createWorkspaceStore } from './workspace-store';
 export type {
+  EditorRequest,
   TreeRequest,
   WorkspaceState,
   WorkspaceStore,
