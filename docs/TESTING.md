@@ -168,6 +168,8 @@ The custom fixture in `tests/e2e/fixtures/pressbench.ts` must:
 - Run axe (`@axe-core/playwright`) when a test calls `await a11y.check()`; fail on serious or critical issues.
 - Boot Playground once per worker where possible and reset state between tests, to keep runs fast.
 - Attach Pressbench's own logs (`window.__PRESSBENCH_LOGS__`, available when `?debug=1`) to the report on failure.
+- Provide the `workspace` page object (`tests/e2e/pages/workspace.ts`): tree items, tabs, editor, palette, and
+  helpers such as `createFile()` and `dragTreeItem()` (pointer-event drag with `mouse.move` / `down` / `up`).
 
 ## 7. Manual checklist (real browser)
 

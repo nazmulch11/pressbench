@@ -1,8 +1,8 @@
 # Pressbench implementation plan
 
-> Status: living document. Last reviewed: 2026-10-20. Current phase: **Phase 1 built; exit gate passed locally**
-> (see [Phase 1 test run](test-runs/2026-10-20-phase-1.md)). Phase 0's CI item passed on the first pull request.
-> Phase 2 is next.
+> Status: living document. Last reviewed: 2026-10-20. Current phase: **Phase 2 built; exit gate passed locally**
+> (see [Phase 2 test run](test-runs/2026-10-20-phase-2.md)). Phase 0's CI item passed on the first pull request.
+> Phase 3 is next.
 > Owner: Nazmul. Update this file whenever a phase starts, finishes or changes scope (see [UPDATING.md](UPDATING.md)).
 
 Pressbench is a browser-based IDE for WordPress plugin and theme developers. It runs WordPress inside the browser with
@@ -191,11 +191,25 @@ Tasks:
 
 Test cases: [test-cases/02-workspace.md](test-cases/02-workspace.md)
 
+Built 2026-10-20 (branch `feat/workspace-shell`). Decisions and leftovers:
+
+- Stores live in `src/stores/` (Zustand, one store per instance through React context); features compose through
+  slot props in `src/app/App.tsx` because features may not import each other.
+- The editor area is a plain text area until Monaco arrives in Phase 3; drafts, the unsaved marker and
+  `Ctrl/Cmd+S` already go through the store, so Phase 3 swaps the component, not the flow.
+- `Ctrl/Cmd+W` closes the active tab inside the app, but browsers may close their own tab first. Phase 3 should
+  decide on a conflict-free default (for example `Alt+W`) when it adds the editor's key bindings.
+- The tree is rendered as flat rows with `aria-level` / `aria-posinset` / `aria-setsize` (axe flagged nested
+  `treeitem`s for `label-content-name-mismatch`); keep that when adding icons or badges.
+- Drag and drop uses pointer events, not the HTML5 drag API; Playwright drives it with the mouse in every engine.
+
 Exit gate:
 
-- [ ] All tree and tab operations work with mouse and keyboard only
-- [ ] axe reports no serious or critical issues on the workspace
-- [ ] E2E suite green 3× on three browsers
+- [x] All tree and tab operations work with mouse and keyboard only (TC-WS-003 to TC-WS-009, TC-WS-017,
+      TC-WS-018; keyboard-only e2e TC-WS-008; checked by hand in the built-in browser, 2026-10-20)
+- [x] axe reports no serious or critical issues on the workspace (TC-WS-012, light and dark, palette and context
+      menu open)
+- [x] E2E suite green 3× on three browsers (see the [Phase 2 test run](test-runs/2026-10-20-phase-2.md))
 
 ### Phase 3: Editor
 
@@ -363,7 +377,7 @@ Update this table whenever test cases are added or automated. CI's `npm run docs
 | ----------- | ----------------- | ------ | ------------- | ---------------- | ---------------- |
 | Foundation  | 00-foundation.md  | TC-FND | 10            | 1                | 9                |
 | Playground  | 01-playground.md  | TC-PG  | 14            | 0                | 14               |
-| Workspace   | 02-workspace.md   | TC-WS  | 12            | 0                | 0                |
+| Workspace   | 02-workspace.md   | TC-WS  | 25            | 0                | 25               |
 | Editor      | 03-editor.md      | TC-ED  | 10            | 0                | 0                |
 | Runtime     | 04-runtime.md     | TC-RT  | 9             | 0                | 0                |
 | Scaffolding | 05-scaffolding.md | TC-SC  | 9             | 0                | 0                |
@@ -371,7 +385,7 @@ Update this table whenever test cases are added or automated. CI's `npm run docs
 | Projects    | 07-projects.md    | TC-PRJ | 10            | 1                | 0                |
 | Sharing     | 08-sharing.md     | TC-SH  | 5             | 0                | 0                |
 | Hardening   | 09-hardening.md   | TC-HD  | 7             | 4                | 0                |
-| **Total**   |                   |        | **93**        | **6**            | **23**           |
+| **Total**   |                   |        | **106**       | **6**            | **48**           |
 
 ---
 

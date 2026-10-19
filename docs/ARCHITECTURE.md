@@ -47,13 +47,14 @@ pressbench/
 │   │   └── sharing/
 │   ├── lib/
 │   │   ├── playground/      # the ONLY place that imports @wp-playground/*
-│   │   ├── fs/              # ProjectFs: file map, path validation
-│   │   ├── storage/         # the ONLY place that touches OPFS / IndexedDB
+│   │   ├── fs/              # ProjectFs: file map, path validation, tree model
+│   │   ├── storage/         # the ONLY place that touches OPFS / IndexedDB; also localStorage preferences
 │   │   ├── sync/            # ProjectFs → Playground sync, debounce
 │   │   ├── logger/
 │   │   └── result.ts
+│   ├── stores/              # Zustand stores shared by features (workspace store, demo project)
 │   ├── data/                # generated: wp-functions.json, wp-hooks.json (+ source versions)
-│   └── ui/                  # shared components, tokens.css
+│   └── ui/                  # shared components (Splitter, Dialog, Menu), tokens.css
 ├── templates/               # scaffold templates: plugin/, block-theme/, block/
 └── tests/
     ├── e2e/                 # Playwright specs, fixtures/, pages/ (page objects)
@@ -70,12 +71,19 @@ pressbench/
 | `features/preview`     | Phase 1: spike panel (versions, start, status, iframe); later the preview pane | `<PlaygroundPanel service={…} />`, `usePlaygroundState(service)`                                                                                                                                                      |
 | `lib/fs`               | In-memory project files, path validation, change events                        | `ProjectFs` with `read`, `write`, `rename`, `remove`, `list`, `onChange`                                                                                                                                              |
 | `lib/sync`             | Push `ProjectFs` changes into Playground, debounce, status                     | `createSync(fs, playground)` → `status$`, `flush()`                                                                                                                                                                   |
-| `lib/storage`          | Save/load projects in OPFS; metadata in IndexedDB; quota                       | `ProjectRepository` with `list`, `load`, `save`, `remove`, `estimateQuota`                                                                                                                                            |
+| `lib/storage` (later)  | Save/load projects in OPFS; metadata in IndexedDB; quota                       | `ProjectRepository` with `list`, `load`, `save`, `remove`, `estimateQuota`                                                                                                                                            |
 | `features/editor`      | Monaco lifecycle, language mapping, WordPress completion and hover             | `<CodeEditor path=… />`, `registerWordPressProviders(monaco)`                                                                                                                                                         |
 | `features/debug-panel` | Parse PHP errors and debug.log, show and link to lines                         | `parseDebugLog(text)`, `<DebugPanel />`                                                                                                                                                                               |
 | `features/scaffolding` | Render templates, validate inputs                                              | `generateProject(kind, options)`                                                                                                                                                                                      |
 | `features/projects`    | Project list, zip import/export                                                | `importZip(file)`, `exportZip(project)`                                                                                                                                                                               |
 | `features/sharing`     | Encode/decode share links                                                      | `encodeShare(project)`, `decodeShare(hash)`                                                                                                                                                                           |
+
+### Composition
+
+Features never import each other. `src/app/App.tsx` composes them: it creates the workspace store once (over
+`localStorage` preferences) and renders `<Workspace sidebar={<FileTree />} preview={<PlaygroundPanel />} />`. The
+tree and the tab bar talk through the store (open a file, follow a rename, ask the tree to start a "new file"
+from the palette), never through props across features.
 
 ## 4. Data flow: edit → preview
 

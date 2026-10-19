@@ -1,6 +1,8 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test as base } from '@playwright/test';
 
+import { WorkspacePage } from '../pages/workspace';
+
 /**
  * Console errors that are expected and harmless. Every entry needs a comment saying why it is allowed.
  * Keep this list empty unless there is no way to fix the source of the message.
@@ -21,6 +23,8 @@ interface PressbenchFixtures {
   /** Console and page errors seen during the test. The test fails at teardown if any are left. */
   pageErrors: string[];
   a11y: A11y;
+  /** Page object for the workspace shell (tree, tabs, editor, palette). */
+  workspace: WorkspacePage;
 }
 
 export const test = base.extend<PressbenchFixtures>({
@@ -57,6 +61,10 @@ export const test = base.extend<PressbenchFixtures>({
     },
     { auto: true },
   ],
+
+  workspace: async ({ page }, use) => {
+    await use(new WorkspacePage(page));
+  },
 
   a11y: async ({ page }, use) => {
     await use({

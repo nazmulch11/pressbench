@@ -39,7 +39,8 @@
   "dependencies": {
     "@wp-playground/client": "3.1.59",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "zustand": "5.0.15"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
