@@ -1,0 +1,9 @@
+dist/
+coverage/
+test-results/
+playwright-report/
+blob-report/
+node_modules/
+package-lock.json
+src/data/
+scripts/fixtures/

@@ -1,0 +1,9 @@
+{
+  // Node-side code: build scripts, tool configs, Playwright and integration tests.
+  // DOM types stay available because Playwright callbacks run inside the page.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["scripts", "tests", "*.config.ts", "src/app/debug-globals.ts"]
+}

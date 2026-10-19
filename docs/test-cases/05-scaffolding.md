@@ -1,0 +1,13 @@
+# Test cases: Scaffolding (TC-SC)
+
+| ID        | Title                                           | Level       | Priority | Steps                                                           | Expected                                                                  | Automation |
+| --------- | ----------------------------------------------- | ----------- | -------- | --------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------- |
+| TC-SC-001 | Slug from name                                  | unit        | P0       | `toSlug('My Cool Plugin!')`                                     | `my-cool-plugin`                                                          | todo       |
+| TC-SC-002 | Reject invalid slugs                            | unit        | P0       | Validate `''`, `-a`, `a_b`, 200-char slug                       | Each rejected with a reason                                               | todo       |
+| TC-SC-003 | Template tokens are replaced and escaped        | unit        | P0       | Render plugin template with name containing `*/` and quotes     | No unreplaced `{{` tokens; header comment is not broken                   | todo       |
+| TC-SC-004 | New plugin file set                             | unit        | P0       | Generate plugin                                                 | Files: main PHP, `readme.txt`, `uninstall.php`, `includes/`, `languages/` | todo       |
+| TC-SC-005 | New plugin activates cleanly                    | integration | P0       | Generate; install into Playground; activate                     | Active; no PHP notices in debug.log                                       | todo       |
+| TC-SC-006 | New block theme activates cleanly               | integration | P0       | Generate; activate                                              | Active; front end renders header and footer parts                         | todo       |
+| TC-SC-007 | New block appears in the editor                 | e2e         | P0       | Generate block plugin; activate; open post editor; insert block | Block found in inserter and renders                                       | todo       |
+| TC-SC-008 | Generated PHP passes WordPress Coding Standards | integration | P0       | CI job runs PHPCS (WordPress standard) on every template output | Zero errors                                                               | todo       |
+| TC-SC-009 | Wizard end to end                               | e2e         | P0       | New project → Plugin → fill form → Create                       | Project opens with main file in a tab; preview shows plugin active        | todo       |
