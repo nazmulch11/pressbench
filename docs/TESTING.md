@@ -152,12 +152,19 @@ failed run instead. The real config also reads two optional environment switches
 Chromium without ffmpeg: `PW_CHROMIUM_EXECUTABLE=<path to chrome>` and `PW_NO_VIDEO=1`. Leave both unset on developer
 machines and in CI.
 
+The real config strips `userAgent` from the device presets (`withoutUserAgent(devices['Desktop Chrome'])`). With
+Playwright's user-agent override in place, the WordPress Playground remote cannot load its module web worker inside
+the cross-origin iframe and boot never completes (found in Phase 1 on Chromium 156). The browsers' own user agents
+are used instead; viewport and screen presets are kept.
+
 ## 6. Shared E2E guards
 
 The custom fixture in `tests/e2e/fixtures/pressbench.ts` must:
 
 - Collect `console` messages of type `error` and `pageerror` events; fail the test at teardown if any appeared,
-  except entries in an explicit, commented allow-list.
+  except entries in an explicit, commented allow-list. The list currently has one entry: Firefox logs a
+  service-worker error from `playground.wordpress.net/sw.js` for a request with an empty URL inside the WordPress
+  iframe. It comes from the hosted remote, not from Pressbench.
 - Run axe (`@axe-core/playwright`) when a test calls `await a11y.check()`; fail on serious or critical issues.
 - Boot Playground once per worker where possible and reset state between tests, to keep runs fast.
 - Attach Pressbench's own logs (`window.__PRESSBENCH_LOGS__`, available when `?debug=1`) to the report on failure.

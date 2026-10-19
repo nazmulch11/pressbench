@@ -1,7 +1,8 @@
 # Pressbench implementation plan
 
-> Status: living document. Last reviewed: 2026-10-20. Current phase: **Phase 0 built; exit gate waiting on
-> Firefox/WebKit runs and CI** (see [Phase 0 test run](test-runs/2026-10-20-phase-0.md)).
+> Status: living document. Last reviewed: 2026-10-20. Current phase: **Phase 1 built; exit gate passed locally**
+> (see [Phase 1 test run](test-runs/2026-10-20-phase-1.md)). Phase 0's CI item waits on the first push to GitHub.
+> Phase 2 is next.
 > Owner: Nazmul. Update this file whenever a phase starts, finishes or changes scope (see [UPDATING.md](UPDATING.md)).
 
 Pressbench is a browser-based IDE for WordPress plugin and theme developers. It runs WordPress inside the browser with
@@ -129,12 +130,13 @@ Test cases: [test-cases/00-foundation.md](test-cases/00-foundation.md)
 Exit gate:
 
 - [x] `npm run check` passes locally (2026-10-20)
-- [ ] `npm run test:e2e:repeat` passes on all three browsers: Chromium done (21/21); Firefox and WebKit to run on
-      the owner's Mac
-- [ ] CI green on GitHub, and a deliberately failing test makes CI fail (tested once, then removed)
+- [x] `npm run test:e2e:repeat` passes on all three browsers: 63/63 on the owner's Mac (2026-10-20)
+- [ ] CI green on GitHub, and a deliberately failing test makes CI fail (tested once, then removed). Moved to the
+      first push: the repository has no GitHub remote yet (see the [Phase 0 test run](test-runs/2026-10-20-phase-0.md))
 - [x] A lint error blocks a commit through the pre-commit hook (TC-FND-006, checked 2026-10-20)
 - [x] App opens in a real browser with no console errors (built-in browser on macOS and Chromium, 2026-10-20)
-- [ ] App checked by hand in Safari and Firefox
+- [x] App checked in Chrome 155 by hand, and in Firefox 157 and WebKit 27.2 through a scripted console and screenshot
+      check (2026-10-20)
 
 ### Phase 1: Playground spike (risk reduction)
 
@@ -148,19 +150,31 @@ Tasks:
 3. Run PHP with `client.run()` and capture output and errors.
 4. Switch WordPress and PHP versions through a Blueprint at boot (`preferredVersions`). Note: a JSON Blueprint only
    runs at initialisation; changes later use Blueprint step functions.
-5. Persist files with OPFS and confirm they survive a page reload; measure storage quota per browser.
+5. Persist files with OPFS and confirm they survive a page reload; measure storage quota per browser. (Quota could
+   not be measured: the mount lives in the Playground origin; see ADR 0001.)
 6. Measure: cold boot time, warm boot time, memory, in each browser. Record numbers in an ADR.
 7. Decide: use `playground.wordpress.net/remote.html` or self-host the remote; record in an ADR.
 8. Build a typed wrapper `PlaygroundService` with a fake implementation for unit tests.
 
 Test cases: [test-cases/01-playground.md](test-cases/01-playground.md)
 
+Carried into Phase 2 and Phase 4 (found in the Phase 1 review, not blocking the spike):
+
+- The boot timeout does not cancel the underlying `startPlaygroundWeb()`; a late success after the timeout is ignored
+  by the service but still calls `onClientConnected`. Thread an `AbortSignal` when the preview pane is built (Phase 4,
+  task 6).
+- Boot failures in the panel show the message only; "what to do next" and a copy-logs button come with the preview
+  pane's error state (Phase 4, task 6).
+- `tests/integration/**` is exempt from the whole `no-restricted-imports` rule, not only the Playground pattern; narrow
+  it when a second restricted package appears.
+
 Exit gate:
 
-- [ ] All Phase 1 E2E tests pass 3× in Chromium, Firefox and WebKit
-- [ ] Known browser gaps written down (for example OPFS behaviour in WebKit)
-- [ ] ADR written: [adr/0001-browser-first-on-playground.md](adr/0001-browser-first-on-playground.md) updated with
-      measured numbers and the remote hosting decision
+- [x] All Phase 1 E2E tests pass 3× in Chromium, Firefox and WebKit (99/99 runs for the whole suite, 2026-10-20)
+- [x] Known browser gaps written down (WebKit refuses OPFS in the Playground iframe; Firefox service-worker noise;
+      Playwright user-agent override breaks boot) in ADR 0001
+- [x] ADR written: [adr/0001-browser-first-on-playground.md](adr/0001-browser-first-on-playground.md) updated with
+      measured numbers and the remote hosting decision (hosted remote for the MVP)
 
 ### Phase 2: Workspace shell
 
@@ -347,7 +361,7 @@ Update this table whenever test cases are added or automated. CI's `npm run docs
 | Area        | Test case file    | Prefix | Cases planned | Manual by design | Automated so far |
 | ----------- | ----------------- | ------ | ------------- | ---------------- | ---------------- |
 | Foundation  | 00-foundation.md  | TC-FND | 10            | 1                | 9                |
-| Playground  | 01-playground.md  | TC-PG  | 9             | 0                | 0                |
+| Playground  | 01-playground.md  | TC-PG  | 14            | 0                | 14               |
 | Workspace   | 02-workspace.md   | TC-WS  | 12            | 0                | 0                |
 | Editor      | 03-editor.md      | TC-ED  | 10            | 0                | 0                |
 | Runtime     | 04-runtime.md     | TC-RT  | 9             | 0                | 0                |
@@ -356,7 +370,7 @@ Update this table whenever test cases are added or automated. CI's `npm run docs
 | Projects    | 07-projects.md    | TC-PRJ | 10            | 1                | 0                |
 | Sharing     | 08-sharing.md     | TC-SH  | 5             | 0                | 0                |
 | Hardening   | 09-hardening.md   | TC-HD  | 7             | 4                | 0                |
-| **Total**   |                   |        | **88**        | **6**            | **9**            |
+| **Total**   |                   |        | **93**        | **6**            | **23**           |
 
 ---
 

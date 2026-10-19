@@ -14,8 +14,9 @@ WordPress Playground (`@wp-playground/client`); the editor is Monaco; the app is
 - Testing: [docs/TESTING.md](docs/TESTING.md) · Debugging: [docs/DEBUGGING.md](docs/DEBUGGING.md)
 - Updating deps, docs and this file: [docs/UPDATING.md](docs/UPDATING.md)
 
-**Current status:** Phase 0 (foundation) built; exit gate waits on Firefox/WebKit E2E runs and CI (see
-`docs/test-runs/2026-10-20-phase-0.md`). Phase 1 (Playground spike) is next. Update this line when a phase changes.
+**Current status:** Phase 1 (Playground spike) built and its exit gate passed locally (see
+`docs/test-runs/2026-10-20-phase-1.md`). The Phase 0 CI check still waits on the first push to GitHub. Phase 2
+(workspace shell) is next. Update this line when a phase changes.
 
 ## Commands
 

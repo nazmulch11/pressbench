@@ -4,8 +4,9 @@ A browser-based IDE for WordPress plugin and theme developers. Open a link, buil
 WordPress and PHP versions, and export it. Nothing to install. WordPress runs inside your browser through
 [WordPress Playground](https://developer.wordpress.org/playground/).
 
-> Status: Phase 0 (foundation) built. The app is a placeholder screen with the full test and lint tooling behind it.
-> See the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
+> Status: Phase 1 (Playground spike) built. The app boots WordPress in the tab through the hosted Playground remote,
+> writes and activates plugins, runs PHP, and keeps files across reloads where the browser allows it. The workspace UI
+> arrives in Phase 2. See the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
 ## Quick start
 
@@ -31,7 +32,8 @@ These steps could not be done automatically and need doing once on your machine:
    cp docs/templates/pull_request_template.md .github/pull_request_template.md
    ```
 
-3. Run the full browser suite once: `npm run test:e2e:repeat` (Chromium, Firefox and WebKit, 3 runs each).
+3. Run the full browser suite once: `npm run test:e2e:repeat` (Chromium, Firefox and WebKit, 3 runs each). The
+   Playground tests need network access to `playground.wordpress.net`.
 
 Before opening a pull request:
 

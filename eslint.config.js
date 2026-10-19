@@ -151,9 +151,10 @@ export default defineEslintConfig(
     ...jsxA11y.flatConfigs.recommended,
   },
 
-  // Boundary exceptions: the owning modules.
+  // Boundary exceptions: the owning modules. The integration harness drives real PHP through
+  // @wp-playground/cli in Node; it is test tooling, not app code.
   {
-    files: ['src/lib/playground/**'],
+    files: ['src/lib/playground/**', 'tests/integration/**'],
     rules: { 'no-restricted-imports': 'off' },
   },
   {

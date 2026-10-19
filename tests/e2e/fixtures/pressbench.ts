@@ -5,7 +5,12 @@ import { expect, test as base } from '@playwright/test';
  * Console errors that are expected and harmless. Every entry needs a comment saying why it is allowed.
  * Keep this list empty unless there is no way to fix the source of the message.
  */
-const ALLOWED_CONSOLE_ERRORS: readonly RegExp[] = [];
+const ALLOWED_CONSOLE_ERRORS: readonly RegExp[] = [
+  // Firefox only: WordPress Playground's own service worker (playground.wordpress.net/sw.js) logs this for a
+  // request with an empty URL made from inside the WordPress iframe. It comes from the hosted remote, not from
+  // Pressbench, and WordPress works normally. Tracked as a known browser gap in ADR 0001.
+  /A ServiceWorker intercepted the request and encountered an unexpected error.*playground\.wordpress\.net\/sw\.js/s,
+];
 
 export interface A11y {
   /** Runs axe on the current page and fails on serious or critical violations. */
