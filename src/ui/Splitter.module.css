@@ -1,0 +1,43 @@
+.splitter {
+  position: relative;
+  flex: none;
+  background: var(--color-border);
+  touch-action: none;
+  user-select: none;
+}
+
+.splitter[data-orientation='vertical'] {
+  width: 1px;
+  cursor: col-resize;
+}
+
+.splitter[data-orientation='horizontal'] {
+  height: 1px;
+  cursor: row-resize;
+}
+
+/* A wider invisible hit area so the 1 px line is easy to grab. */
+.splitter::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.splitter[data-orientation='vertical']::before {
+  inset: 0 -4px;
+}
+
+.splitter[data-orientation='horizontal']::before {
+  inset: -4px 0;
+}
+
+.splitter:hover,
+.splitter[data-dragging],
+.splitter:focus-visible {
+  background: var(--color-accent);
+}
+
+.splitter:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}

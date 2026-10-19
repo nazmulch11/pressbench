@@ -4,9 +4,10 @@ A browser-based IDE for WordPress plugin and theme developers. Open a link, buil
 WordPress and PHP versions, and export it. Nothing to install. WordPress runs inside your browser through
 [WordPress Playground](https://developer.wordpress.org/playground/).
 
-> Status: Phase 1 (Playground spike) built. The app boots WordPress in the tab through the hosted Playground remote,
-> writes and activates plugins, runs PHP, and keeps files across reloads where the browser allows it. The workspace UI
-> arrives in Phase 2. See the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
+> Status: Phase 2 (workspace shell) built. The app opens with a demo plugin in a resizable workspace: file tree
+> (create, rename, move, delete; mouse and keyboard), tabs with unsaved markers, a command palette (Ctrl/Cmd+K) and
+> the Phase 1 Playground panel in the preview area. Monaco arrives in Phase 3. See the
+> [implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
 ## Quick start
 

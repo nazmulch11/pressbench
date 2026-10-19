@@ -27,7 +27,13 @@
   --color-accent: #2f5bd3;
   --color-accent-text: #2a52bf;
   --color-on-accent: #ffffff;
+  --color-accent-soft: #e4ebfb;
+  --color-selection: #d6e0fa;
   --color-focus: #2f5bd3;
+  --color-backdrop: rgb(27 31 39 / 45%);
+  --color-danger: #b42318;
+  --color-on-danger: #ffffff;
+  --shadow-overlay: 0 8px 24px rgb(27 31 39 / 18%);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -40,7 +46,13 @@
     --color-accent: #7c9cf5;
     --color-accent-text: #93aef7;
     --color-on-accent: #12151b;
+    --color-accent-soft: #273352;
+    --color-selection: #2a3a63;
     --color-focus: #93aef7;
+    --color-backdrop: rgb(0 0 0 / 60%);
+    --color-danger: #f28b82;
+    --color-on-danger: #12151b;
+    --shadow-overlay: 0 8px 24px rgb(0 0 0 / 50%);
   }
 }
 
@@ -53,7 +65,13 @@
   --color-accent: #7c9cf5;
   --color-accent-text: #93aef7;
   --color-on-accent: #12151b;
+  --color-accent-soft: #273352;
+  --color-selection: #2a3a63;
   --color-focus: #93aef7;
+  --color-backdrop: rgb(0 0 0 / 60%);
+  --color-danger: #f28b82;
+  --color-on-danger: #12151b;
+  --shadow-overlay: 0 8px 24px rgb(0 0 0 / 50%);
 }
 
 *,
@@ -78,4 +96,18 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
+}
+
+/* Text for assistive technology only. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

@@ -63,8 +63,11 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full layout. Enforced with ESLint
 
 - Only `src/lib/playground/` imports `@wp-playground/*`.
 - Only `src/lib/storage/` touches OPFS or IndexedDB.
-- `src/features/<name>/` may import from `src/lib/` and `src/ui/`, never from another feature directly. Share through
-  `src/lib/` or a store.
+- `src/features/<name>/` may import from `src/lib/`, `src/ui/` and `src/stores/`, never from another feature
+  directly. Share through `src/lib/` or a store; compose features in `src/app/` through slot props (for example
+  `<Workspace sidebar={<FileTree />} />`).
+- Stores (`src/stores/`) are created per instance (`createWorkspaceStore()`) and reached through React context
+  (`useWorkspaceStore(selector)`), never as module singletons, so every test gets a fresh store.
 - Each feature exposes a public `index.ts`; other code imports only from it.
 - Path alias `@/` maps to `src/`.
 

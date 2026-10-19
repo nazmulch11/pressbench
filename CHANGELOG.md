@@ -7,6 +7,37 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Phase 2 workspace shell (`src/features/workspace`): header with the product name and a "Commands" button, a
+  resizable layout (sidebar, editor column with tabs and a bottom panel, preview) split by keyboard-operable
+  splitters (`role="separator"`, arrow keys, Home, End). Panel sizes and visibility are remembered per browser.
+- File tree (`src/features/file-tree`): a WAI-ARIA tree (flat rows with `aria-level`, `aria-posinset`,
+  `aria-setsize`, roving tabindex). Create file and folder, rename (F2), delete with a confirmation (Delete), move
+  by dragging or through "Move to…", context menu (right-click, Shift+F10, ContextMenu key). Every action works
+  with the mouse and with the keyboard alone; moves and deletes are announced in a polite live region.
+- Tabs: open, switch, close (close button, middle click, Ctrl/Cmd+W, "Close tab" command), reorder by dragging or
+  with Alt+Shift+ArrowLeft/ArrowRight, unsaved marker ("name, unsaved" plus a dot), and a Save / Don't save /
+  Cancel dialog when an edited tab is closed. Tabs and drafts follow renames, moves and deletes in the tree.
+- Command palette (Ctrl/Cmd+K or the Commands button): New file, New folder, Save file, Rename file, Close tab,
+  Toggle sidebar, Toggle preview, Toggle bottom panel, Reset layout. Combobox over a listbox, filtered by every
+  word typed.
+- Placeholder editor: a plain text area over the active file with drafts and Ctrl/Cmd+S until Monaco arrives in
+  Phase 3.
+- `src/lib/fs`: in-memory `ProjectFs` (`read`, `write`, `mkdir`, `rename`, `remove`, `exists`, `stat`, `list`,
+  `entries`, `onChange`) with name and path validation (empty, slashes, `.` and `..`, control characters and
+  `< > : " | ? *`, Windows reserved names, trailing dot or space, 255-character limit, no absolute paths) and
+  natural, folder-first sorting; `buildTree` / `flattenTree` for the tree view.
+- `src/lib/storage/preferences.ts`: small JSON preferences over `localStorage` with an in-memory fallback when the
+  storage is missing or throws.
+- `src/stores`: the Zustand workspace store (project files, tabs, drafts, layout, palette state, tree requests),
+  created per instance with `createWorkspaceStore()` and provided through `WorkspaceStoreProvider` /
+  `useWorkspaceStore(selector)`. The demo project (`my-plugin/`) lives in `src/stores/demo-project.ts`.
+- Shared UI in `src/ui`: `Splitter`, `Dialog` (focus trap, Escape, focus restore) and `Menu`.
+- Test cases TC-WS-001 to TC-WS-025, all automated: 8 e2e (three browsers, including axe in light and dark mode
+  and with the palette open), the rest unit and component. `tests/e2e/pages/workspace.ts` page object, exposed as
+  the `workspace` fixture.
+- `.claude/launch.json` so agent browser tools can start the dev server by name.
+- Phase 2 test run record (`docs/test-runs/2026-10-20-phase-2.md`) with the independent review's findings and fixes.
+
 - Phase 1 Playground spike: `src/lib/playground/` wraps `@wp-playground/client` behind a `PlaygroundService`
   interface (boot with chosen WordPress and PHP versions, run PHP, read/write/list files, activate plugins, HTTP
   requests against the site, navigate the preview, persist a folder to the origin-private file system). Every
@@ -65,6 +96,14 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Internal
 
+- Dependency: `zustand` 5.0.15 (MIT, 95 KB unpacked, about 1 KB gzipped for the vanilla store plus the React
+  binding, maintained by pmndrs, last release 2026-08). Chosen in the plan for small, testable stores.
+- The file tree renders flat rows instead of nested `treeitem` / `group` elements: with nesting, axe reported
+  `label-content-name-mismatch` (serious) because a folder's visible text included its children.
+- The tree's live region uses `aria-live="polite"`, not `role="status"`, because the Playground panel owns the
+  page's status role and the Phase 1 e2e tests locate it by role.
+- Features compose through slots: `App` passes `<FileTree />` and `<PlaygroundPanel />` into `Workspace`'s
+  `sidebar` and `preview` props, so no feature imports another.
 - Dependencies: `@wp-playground/client` 3.1.59 (GPL-2.0-or-later, ~3.4 MB unpacked, actively maintained by the
   WordPress project; lazy-loaded so it stays out of the initial bundle) and `@wp-playground/cli` 3.1.59 (dev only,
   same licence and maintainers) for integration tests. Both declare `node >= 24.18`; they run on Node 22 (npm warns).
