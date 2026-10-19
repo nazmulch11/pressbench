@@ -1,7 +1,7 @@
 # Pressbench implementation plan
 
 > Status: living document. Last reviewed: 2026-10-20. Current phase: **Phase 1 built; exit gate passed locally**
-> (see [Phase 1 test run](test-runs/2026-10-20-phase-1.md)). Phase 0's CI item waits on the first push to GitHub.
+> (see [Phase 1 test run](test-runs/2026-10-20-phase-1.md)). Phase 0's CI item passed on the first pull request.
 > Phase 2 is next.
 > Owner: Nazmul. Update this file whenever a phase starts, finishes or changes scope (see [UPDATING.md](UPDATING.md)).
 
@@ -131,8 +131,9 @@ Exit gate:
 
 - [x] `npm run check` passes locally (2026-10-20)
 - [x] `npm run test:e2e:repeat` passes on all three browsers: 63/63 on the owner's Mac (2026-10-20)
-- [ ] CI green on GitHub, and a deliberately failing test makes CI fail (tested once, then removed). Moved to the
-      first push: the repository has no GitHub remote yet (see the [Phase 0 test run](test-runs/2026-10-20-phase-0.md))
+- [x] CI green on GitHub, and a deliberately failing test makes CI fail (tested once, then removed): green on
+      [PR #2](https://github.com/nazmulch11/pressbench/pull/2), red on the probe PR #1 (2026-10-20, see the
+      [Phase 0 test run](test-runs/2026-10-20-phase-0.md))
 - [x] A lint error blocks a commit through the pre-commit hook (TC-FND-006, checked 2026-10-20)
 - [x] App opens in a real browser with no console errors (built-in browser on macOS and Chromium, 2026-10-20)
 - [x] App checked in Chrome 155 by hand, and in Firefox 157 and WebKit 27.2 through a scripted console and screenshot
