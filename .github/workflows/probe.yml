@@ -1,0 +1,7 @@
+name: Probe
+on: [push, pull_request]
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "actions work"
