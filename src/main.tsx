@@ -6,10 +6,23 @@ import { createRoot } from 'react-dom/client';
 
 import { App } from './app/App';
 import { createLogger, initLoggingFromUrl } from './lib/logger';
+import { createWebPlaygroundService } from './lib/playground';
 
 const logging = initLoggingFromUrl(window.location.search);
-if (logging.isBufferEnabled) {
+const isDebug = logging.isBufferEnabled;
+if (isDebug) {
   window.__PRESSBENCH_LOGS__ = logging.buffer;
+}
+
+const playground = createWebPlaygroundService({
+  onClientConnected: (client) => {
+    if (isDebug) {
+      window.__PRESSBENCH__ = { ...window.__PRESSBENCH__, playground: client };
+    }
+  },
+});
+if (isDebug) {
+  window.__PRESSBENCH__ = { ...window.__PRESSBENCH__, playgroundService: playground };
 }
 
 const log = createLogger('ui');
@@ -20,7 +33,7 @@ if (rootElement === null) {
 } else {
   createRoot(rootElement).render(
     <StrictMode>
-      <App />
+      <App playground={playground} />
     </StrictMode>,
   );
 }

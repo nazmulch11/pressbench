@@ -70,7 +70,8 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full layout. Enforced with ESLint
 
 ## 5. React
 
-- Function components only. Props typed with a `type …Props`.
+- Function components only. Props typed with an exported `interface …Props` (the lint preset asks for `interface`
+  over object `type`s).
 - Components render; logic lives in hooks or `lib/`. A component with more than ~3 effects is a refactor signal.
 - Every interactive element is a real `<button>`, `<a>` or form control, with an accessible name.
 - No `dangerouslySetInnerHTML` except for sanitized, trusted content, with a comment.

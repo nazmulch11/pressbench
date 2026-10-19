@@ -59,16 +59,23 @@ log.debug('write queued', { path, bytes: content.length });
 
 ### Inside Playground
 
-From the console with `?debug=1`, `window.__PRESSBENCH__.playground` exposes the client:
+From the console with `?debug=1`, `window.__PRESSBENCH__` exposes two handles once WordPress is running:
+`playgroundService` (Pressbench's wrapper, every call returns a `Result`) and `playground` (the raw
+`@wp-playground/client` instance):
 
 ```js
+const service = window.__PRESSBENCH__.playgroundService;
+await service.run('<?php echo PHP_VERSION;'); // { ok: true, value: { output: '8.3.33', … } }
+await service.readFile('/wordpress/wp-content/debug.log');
+service.state; // { status: 'ready', bootMs, versions, persistence }
+
 const pg = window.__PRESSBENCH__.playground;
 await pg.run({ code: '<?php echo PHP_VERSION;' });
-await pg.readFileAsText('/wordpress/wp-content/debug.log');
 await pg.listFiles('/wordpress/wp-content/plugins');
 ```
 
-This hook only exists in debug mode and is never shipped enabled.
+These hooks only exist in debug mode and are never shipped enabled. The E2E tests drive the service through
+`playgroundService`.
 
 ### Playwright
 

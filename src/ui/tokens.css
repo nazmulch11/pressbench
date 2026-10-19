@@ -26,6 +26,7 @@
   --color-text-muted: #545b68;
   --color-accent: #2f5bd3;
   --color-accent-text: #2a52bf;
+  --color-on-accent: #ffffff;
   --color-focus: #2f5bd3;
 }
 
@@ -38,6 +39,7 @@
     --color-text-muted: #a3abb9;
     --color-accent: #7c9cf5;
     --color-accent-text: #93aef7;
+    --color-on-accent: #12151b;
     --color-focus: #93aef7;
   }
 }
@@ -50,6 +52,7 @@
   --color-text-muted: #a3abb9;
   --color-accent: #7c9cf5;
   --color-accent-text: #93aef7;
+  --color-on-accent: #12151b;
   --color-focus: #93aef7;
 }
 

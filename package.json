@@ -37,6 +37,7 @@
     "*.{md,json,css,html,yml,yaml}": "prettier --write"
   },
   "dependencies": {
+    "@wp-playground/client": "3.1.59",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
@@ -54,6 +55,7 @@
     "@vitejs/plugin-react": "6.1.2",
     "@vitest/coverage-v8": "5.0.5",
     "@vitest/eslint-plugin": "1.6.27",
+    "@wp-playground/cli": "3.1.59",
     "eslint": "9.39.5",
     "eslint-import-resolver-typescript": "4.4.5",
     "eslint-plugin-import-x": "4.17.1",

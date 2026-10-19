@@ -5,7 +5,8 @@
 ## 1. Overview
 
 Everything runs in the developer's browser tab. There is no Pressbench server in the MVP; the only remote dependency
-is the Playground remote page (hosted by WordPress.org or self-hosted, decided in Phase 1).
+is the Playground remote page, `https://playground.wordpress.net/remote.html`, hosted by WordPress.org (see
+[ADR 0001](adr/0001-browser-first-on-playground.md) for why it is not self-hosted in the MVP).
 
 ```mermaid
 flowchart LR
@@ -62,17 +63,19 @@ pressbench/
 
 ## 3. Key modules
 
-| Module                 | Responsibility                                                       | Public API (sketch)                                                                                                  |
-| ---------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `lib/playground`       | Boot, reboot, run PHP, read/write files, navigate, version switching | `PlaygroundService` interface; `createPlaygroundService(iframe, options)`; `createFakePlaygroundService()` for tests |
-| `lib/fs`               | In-memory project files, path validation, change events              | `ProjectFs` with `read`, `write`, `rename`, `remove`, `list`, `onChange`                                             |
-| `lib/sync`             | Push `ProjectFs` changes into Playground, debounce, status           | `createSync(fs, playground)` → `status$`, `flush()`                                                                  |
-| `lib/storage`          | Save/load projects in OPFS; metadata in IndexedDB; quota             | `ProjectRepository` with `list`, `load`, `save`, `remove`, `estimateQuota`                                           |
-| `features/editor`      | Monaco lifecycle, language mapping, WordPress completion and hover   | `<CodeEditor path=… />`, `registerWordPressProviders(monaco)`                                                        |
-| `features/debug-panel` | Parse PHP errors and debug.log, show and link to lines               | `parseDebugLog(text)`, `<DebugPanel />`                                                                              |
-| `features/scaffolding` | Render templates, validate inputs                                    | `generateProject(kind, options)`                                                                                     |
-| `features/projects`    | Project list, zip import/export                                      | `importZip(file)`, `exportZip(project)`                                                                              |
-| `features/sharing`     | Encode/decode share links                                            | `encodeShare(project)`, `decodeShare(hash)`                                                                          |
+| Module                 | Responsibility                                                                 | Public API (sketch)                                                                                                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/playground`       | Boot, run PHP, read/write files, activate plugins, navigate, persist           | `PlaygroundService` interface; `createWebPlaygroundService(options)` (browser); `createPlaygroundService({ connect })` (core, also used over `@wp-playground/cli` in Node); `createFakePlaygroundService()` for tests |
+| `lib/result`           | `Result<T, E>` with `ok()` / `err()` helpers                                   | Every service method that can fail returns a `Result`; nothing throws across a module boundary                                                                                                                        |
+| `features/preview`     | Phase 1: spike panel (versions, start, status, iframe); later the preview pane | `<PlaygroundPanel service={…} />`, `usePlaygroundState(service)`                                                                                                                                                      |
+| `lib/fs`               | In-memory project files, path validation, change events                        | `ProjectFs` with `read`, `write`, `rename`, `remove`, `list`, `onChange`                                                                                                                                              |
+| `lib/sync`             | Push `ProjectFs` changes into Playground, debounce, status                     | `createSync(fs, playground)` → `status$`, `flush()`                                                                                                                                                                   |
+| `lib/storage`          | Save/load projects in OPFS; metadata in IndexedDB; quota                       | `ProjectRepository` with `list`, `load`, `save`, `remove`, `estimateQuota`                                                                                                                                            |
+| `features/editor`      | Monaco lifecycle, language mapping, WordPress completion and hover             | `<CodeEditor path=… />`, `registerWordPressProviders(monaco)`                                                                                                                                                         |
+| `features/debug-panel` | Parse PHP errors and debug.log, show and link to lines                         | `parseDebugLog(text)`, `<DebugPanel />`                                                                                                                                                                               |
+| `features/scaffolding` | Render templates, validate inputs                                              | `generateProject(kind, options)`                                                                                                                                                                                      |
+| `features/projects`    | Project list, zip import/export                                                | `importZip(file)`, `exportZip(project)`                                                                                                                                                                               |
+| `features/sharing`     | Encode/decode share links                                                      | `encodeShare(project)`, `decodeShare(hash)`                                                                                                                                                                           |
 
 ## 4. Data flow: edit → preview
 

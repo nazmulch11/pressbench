@@ -7,6 +7,17 @@ const isCI = Boolean(process.env.CI);
 const chromiumExecutable = process.env.PW_CHROMIUM_EXECUTABLE;
 const recordVideo = !process.env.PW_NO_VIDEO;
 
+/**
+ * The device presets override the user agent. With that override, the WordPress Playground remote fails to load its
+ * module web worker inside the cross-origin iframe ("WebWorker failed to load", found in Phase 1, Chromium 156). The
+ * browsers' real user agents are used instead; the viewport and screen presets are kept.
+ */
+function withoutUserAgent<T extends { userAgent?: string }>(device: T): Omit<T, 'userAgent'> {
+  const copy: Partial<T> = { ...device };
+  delete copy.userAgent;
+  return copy as Omit<T, 'userAgent'>;
+}
+
 export default defineConfig({
   testDir: 'tests/e2e',
   fullyParallel: true,
@@ -29,12 +40,12 @@ export default defineConfig({
     {
       name: 'chromium',
       use: {
-        ...devices['Desktop Chrome'],
+        ...withoutUserAgent(devices['Desktop Chrome']),
         ...(chromiumExecutable ? { launchOptions: { executablePath: chromiumExecutable } } : {}),
       },
     },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'firefox', use: { ...withoutUserAgent(devices['Desktop Firefox']) } },
+    { name: 'webkit', use: { ...withoutUserAgent(devices['Desktop Safari']) } },
   ],
   webServer: {
     command: 'npm run build && npm run preview',
