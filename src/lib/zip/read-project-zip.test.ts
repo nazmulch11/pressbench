@@ -1,6 +1,6 @@
 // @vitest-environment node
-import { strToU8, zipSync, type Zippable } from 'fflate';
-import { describe, expect, it } from 'vitest';
+import { Inflate, strToU8, zipSync, type Zippable } from 'fflate';
+import { describe, expect, it, vi } from 'vitest';
 
 import { buildRawZip, buildZip } from '@/test/raw-zip';
 
@@ -272,13 +272,15 @@ describe('readProjectZip with hostile archives', () => {
         { name: 'p/bomb.txt', local: 1, size: 1024 },
       ],
     );
-    const started = performance.now();
+    const push = vi.spyOn(Inflate.prototype, 'push');
 
     const message = await refusal(data);
 
     expect(message).toBe('The zip is damaged: "p/bomb.txt" does not match its declared size.');
-    // A full inflate of 64 MB takes far longer; stopping early keeps this well under a second.
-    expect(performance.now() - started).toBeLessThan(1000);
+    // 64 MB of zeros deflates to about 64 KB, which is 64 steps of 1 KB; stopping early takes only a few.
+    // One push is the small main file, unpacked first.
+    const bombPushes = push.mock.calls.length - 1;
+    expect(bombPushes).toBeLessThanOrEqual(3);
   });
 
   it('TC-PRJ-011h refuses encrypted entries and unsupported compression', async () => {
@@ -335,6 +337,12 @@ describe('readProjectZip with hostile archives', () => {
 
     expect(message).toContain('The zip contains an unsafe path');
     expect(message).toContain(reason);
+  });
+
+  it('TC-PRJ-007h refuses a name that starts with an invisible byte order mark', async () => {
+    const message = await refusal(buildZip({ 'p/p.php': PLUGIN_MAIN, '\uFEFFp/x.php': '<?php' }));
+
+    expect(message).toContain('it contains invisible or direction-changing characters');
   });
 
   it('TC-PRJ-007f refuses a non-ASCII name that is not marked as UTF-8', async () => {

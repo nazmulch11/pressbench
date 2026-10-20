@@ -40,6 +40,11 @@ async function readBytes(file: File): Promise<Uint8Array | null> {
 export interface ProjectUpload {
   /** The last result, as a sentence; empty when there is nothing to show. */
   readonly message: string;
+  /**
+   * Changes with every message, even an identical one. Used as a React key, the message is a new element each time,
+   * so a screen reader announces a repeated refusal.
+   */
+  readonly messageId: number;
   readonly isBusy: boolean;
   readonly upload: (file: File) => Promise<void>;
   readonly dismiss: () => void;
@@ -51,12 +56,14 @@ export interface ProjectUpload {
  */
 export function useProjectUpload(): ProjectUpload {
   const api = useWorkspaceStoreApi();
-  const [message, setMessage] = useState('');
+  const [notice, setNotice] = useState({ text: '', id: 0 });
   const [isBusy, setBusy] = useState(false);
+  const setMessage = useCallback((text: string) => {
+    setNotice((current) => ({ text, id: current.id + 1 }));
+  }, []);
 
   const upload = useCallback(
     async (file: File): Promise<void> => {
-      // Cleared first, so the same message for a second attempt is announced again.
       setMessage('');
       const refuse = (reason: string): void => {
         setMessage(`Could not import ${file.name}: ${reason}`);
@@ -98,12 +105,12 @@ export function useProjectUpload(): ProjectUpload {
         setBusy(false);
       }
     },
-    [api],
+    [api, setMessage],
   );
 
   const dismiss = useCallback(() => {
     setMessage('');
-  }, []);
+  }, [setMessage]);
 
-  return { message, isBusy, upload, dismiss };
+  return { message: notice.text, messageId: notice.id, isBusy, upload, dismiss };
 }

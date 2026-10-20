@@ -5,6 +5,8 @@ import { join, resolve } from 'node:path';
 import { createServer, type ViteDevServer } from 'vite';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { reportIgnorePatterns } from './report-dirs';
+
 const ROOT = resolve(import.meta.dirname, '..');
 const GENERATED = ['coverage', 'playwright-report', 'test-results', 'blob-report'];
 const PROBE = '.dev-server-watch-probe.html';
@@ -66,5 +68,13 @@ describe('dev server', () => {
     expect(generatedWatched).toEqual([]);
     expect(rootEntries.filter((name) => GENERATED.includes(name))).toEqual([]);
     expect(watchedDirs).toContain(join(ROOT, 'src'));
+  });
+
+  it('TC-FND-011a builds the ignore paths with forward slashes, also from a Windows root', () => {
+    const patterns = reportIgnorePatterns('C:\\work\\pressbench');
+
+    expect(patterns).toContain('C:/work/pressbench/coverage');
+    expect(patterns).toContain('C:/work/pressbench/coverage/**');
+    expect(patterns.filter((pattern) => pattern.includes('\\'))).toEqual([]);
   });
 });

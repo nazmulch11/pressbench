@@ -235,4 +235,21 @@ describe('FileTree', () => {
     expect(item('hello.php')).toHaveFocus();
     expect(store.getState().treeRequest).toBeNull();
   });
+
+  it('TC-PRJ-017a reveals an import made while the tree was hidden once the tree is shown', () => {
+    const store = createWorkspaceStore({ seed: SEED });
+    store
+      .getState()
+      .importProject('later', { 'later/inc/later.php': '<?php' }, 'later/inc/later.php');
+
+    render(
+      <WorkspaceStoreProvider store={store}>
+        <FileTree />
+      </WorkspaceStoreProvider>,
+    );
+
+    expect(item('later.php')).toHaveAttribute('aria-selected', 'true');
+    expect(item('later.php')).toHaveFocus();
+    expect(store.getState().treeRequest).toBeNull();
+  });
 });

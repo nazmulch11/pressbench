@@ -41,14 +41,20 @@ export function FileTree(): React.JSX.Element {
     () => new Set(entries.filter((entry) => entry.kind === 'directory').map((entry) => entry.path)),
   );
   const rows = useMemo(() => flattenTree(tree, expanded), [tree, expanded]);
-  const [focusedPath, setFocusedPath] = useState<string | null>(null);
+  // An import made while the tree was hidden left a reveal request; the tree honours it when it appears. The new
+  // folders are already expanded, since a fresh tree starts with every folder open.
+  const [initialReveal] = useState(() => {
+    const request = api.getState().treeRequest;
+    return request?.kind === 'reveal' ? request.path : null;
+  });
+  const [focusedPath, setFocusedPath] = useState<string | null>(initialReveal);
   const [editing, setEditing] = useState<TreeEditing | null>(null);
   const [menu, setMenu] = useState<OpenMenu | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [moving, setMoving] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
   /** Row to focus after the next commit (set from event handlers, consumed by the effect below). */
-  const pendingFocus = useRef<string | null>(null);
+  const pendingFocus = useRef<string | null>(initialReveal);
 
   const visibleFocus = rows.some((row) => row.path === focusedPath)
     ? focusedPath
@@ -82,6 +88,12 @@ export function FileTree(): React.JSX.Element {
     },
     [expand],
   );
+
+  useEffect(() => {
+    if (initialReveal !== null) {
+      api.getState().clearTreeRequest();
+    }
+  }, [api, initialReveal]);
 
   // Requests from the palette and shortcuts arrive through the store; react to each new one once.
   useEffect(

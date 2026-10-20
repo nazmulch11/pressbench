@@ -388,4 +388,44 @@ describe('workspace store: importing a project', () => {
     expect(store.getState().fs.entries()).toEqual(before);
     expect(store.getState().tabs).toEqual([]);
   });
+
+  it('TC-PRJ-015e refuses a folder whose name differs only in case from an existing one', () => {
+    const store = makeStore();
+    const before = store.getState().fs.entries();
+
+    const result = store
+      .getState()
+      .importProject('Plugin', { 'Plugin/p.php': '<?php' }, 'Plugin/p.php');
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        kind: 'exists',
+        message:
+          'A folder named "plugin" already exists (names are compared without case). Rename or delete it, then upload again.',
+      },
+    });
+    expect(store.getState().fs.entries()).toEqual(before);
+  });
+
+  it('TC-PRJ-015f refreshes the file list once per import, not once per file', () => {
+    const store = makeStore();
+    const files: Record<string, string> = {};
+    for (let index = 0; index < 50; index += 1) {
+      files[`big/f${String(index)}.php`] = '<?php';
+    }
+    let entryUpdates = 0;
+    store.subscribe((state, previous) => {
+      if (state.entries !== previous.entries) {
+        entryUpdates += 1;
+      }
+    });
+
+    store.getState().importProject('big', files, 'big/f0.php');
+
+    expect(entryUpdates).toBe(1);
+    expect(store.getState().entries.filter((entry) => entry.path.startsWith('big/'))).toHaveLength(
+      50,
+    );
+  });
 });

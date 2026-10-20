@@ -3,8 +3,7 @@ import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-/** Folders the test tools write into; the dev server must never watch them. */
-const GENERATED_REPORT_DIRS = ['coverage', 'playwright-report', 'test-results', 'blob-report'];
+import { reportIgnorePatterns } from './scripts/report-dirs.ts';
 
 export default defineConfig({
   plugins: [react()],
@@ -19,11 +18,7 @@ export default defineConfig({
     watch: {
       // Test reports are HTML pages inside the project root; when Vitest or Playwright rewrote them, the dev server
       // reloaded the open app and wiped the in-memory project and WordPress (TC-FND-011).
-      ignored: GENERATED_REPORT_DIRS.flatMap((dir) => {
-        // Anchored to the project root, so a folder of the same name inside src/ is still watched.
-        const absolute = fileURLToPath(new URL(`./${dir}`, import.meta.url));
-        return [absolute, `${absolute}/**`];
-      }),
+      ignored: reportIgnorePatterns(fileURLToPath(new URL('.', import.meta.url))),
     },
   },
   preview: {

@@ -136,6 +136,9 @@ export function createWorkspaceStore(options: WorkspaceStoreOptions = {}): Works
       set({ tabs: survivors, activeTab: nextActive, drafts: dropDrafts(drafts, removed) });
     };
 
+    /** True while an import writes many files: the file list is refreshed once at the end instead. */
+    let isImporting = false;
+
     const applyChange = (change: FsChange): void => {
       if (change.type === 'rename') {
         const { tabs, activeTab, drafts } = get();
@@ -148,7 +151,9 @@ export function createWorkspaceStore(options: WorkspaceStoreOptions = {}): Works
       } else if (change.type === 'remove') {
         removeTabs(change.path);
       }
-      set({ entries: fs.entries() });
+      if (!isImporting) {
+        set({ entries: fs.entries() });
+      }
     };
     fs.onChange(applyChange);
 
@@ -210,6 +215,17 @@ export function createWorkspaceStore(options: WorkspaceStoreOptions = {}): Works
             message: `A folder named "${folder}" already exists. Rename or delete it, then upload again.`,
           });
         }
+        // Case-insensitive file systems (macOS, Windows) would merge the two folders on export or checkout.
+        const sameName = fs
+          .list('')
+          .find((entry) => entry.name.toLowerCase() === folder.toLowerCase());
+        if (sameName !== undefined) {
+          return err({
+            kind: 'exists',
+            path: sameName.path,
+            message: `A folder named "${sameName.name}" already exists (names are compared without case). Rename or delete it, then upload again.`,
+          });
+        }
         const outside = Object.keys(files).find((path) => !isAncestor(folder, path));
         if (outside !== undefined) {
           return err({
@@ -223,15 +239,18 @@ export function createWorkspaceStore(options: WorkspaceStoreOptions = {}): Works
             fs.remove(folder);
           }
         };
+        isImporting = true;
         try {
           for (const [path, content] of Object.entries(files)) {
             const written = fs.write(path, content);
             if (!written.ok) {
+              isImporting = false;
               rollBack();
               return written;
             }
           }
         } catch (error: unknown) {
+          isImporting = false;
           // Nothing half-written may stay behind, whatever went wrong.
           rollBack();
           const reason = error instanceof Error ? error.message : String(error);
@@ -241,6 +260,8 @@ export function createWorkspaceStore(options: WorkspaceStoreOptions = {}): Works
             message: `The project could not be added: ${reason}`,
           });
         }
+        isImporting = false;
+        set({ entries: fs.entries() });
         get().openFile(mainFile);
         set({ treeSelection: mainFile });
         get().requestTreeAction({ kind: 'reveal', path: mainFile });

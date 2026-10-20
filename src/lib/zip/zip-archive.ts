@@ -59,7 +59,8 @@ function findEnd(view: DataView): number {
 function decodeName(bytes: Uint8Array, flags: number): string | null {
   if ((flags & UTF8_FLAG) !== 0) {
     try {
-      return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+      // ignoreBOM keeps a leading U+FEFF, so the invisible-character check sees it instead of a silently changed name.
+      return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
     } catch {
       return null;
     }

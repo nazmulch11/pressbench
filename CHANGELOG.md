@@ -15,7 +15,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
   itself (`src/lib/zip/zip-archive.ts`): entries sharing data, sizes that do not match, encrypted and Zip64 entries
   are refused, and inflating stops as soon as a file outgrows its declared size, so a lying zip cannot exhaust
   memory or CPU. macOS junk (`__MACOSX/`, `.DS_Store`) is ignored, and binary files (images, fonts, `.mo`) are skipped
-  and listed, since the editor holds text only. An existing folder of the same name is never overwritten
+  and listed, since the editor holds text only. An existing folder of the same name, compared without case, is never overwritten
   (TC-PRJ-005 to 007, 011 to 017). Uploaded files reach WordPress in the preview once Phase 4 syncs the project.
 - `fflate` 0.8.3 (MIT, about 8 KB gzipped for unzipping, loaded only when a zip is uploaded; actively maintained)
   instead of JSZip, which the plan named: Pressbench reads the zip directory itself and uses fflate's streaming
@@ -116,7 +116,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 - The dev server no longer watches `coverage/`, `playwright-report/`, `test-results/` or `blob-report/`. Running the
   tests rewrote the HTML reports there, which reloaded the open app and wiped the in-memory project and WordPress,
-  including an uploaded plugin (TC-FND-011).
+  including an uploaded plugin (TC-FND-011). The ignore paths use forward slashes, so this also holds on Windows.
 - Editor accessibility on Linux: Monaco draws the line number after a file's final newline in a faded colour on
   Linux only (`renderFinalNewline: 'dimmed'`), at 1.75:1 contrast. The editor now renders it normally on every
   platform (TC-ED-024). This failed CI on Chromium and Firefox after PR #4.

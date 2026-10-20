@@ -6,7 +6,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { ZIP_LIMITS } from '@/lib/zip';
 import { createWorkspaceStore, WorkspaceStoreProvider, type WorkspaceStore } from '@/stores';
 
-import { importSummary, UploadProjectButton } from './UploadProjectButton';
+import { UploadProjectButton } from './UploadProjectButton';
+import { importSummary } from './useProjectUpload';
 
 const PLUGIN_MAIN = '<?php\n/**\n * Plugin Name: Hello Pressbench\n */\n';
 
@@ -181,5 +182,19 @@ describe('UploadProjectButton', () => {
         'Could not import hello.zip: The project could not be added: Maximum call stack size exceeded',
       ),
     ).toBeInTheDocument();
+  });
+
+  it('TC-PRJ-016k shows a repeated refusal as a new message, so it is announced again', async () => {
+    const { user } = renderButton();
+    const file = zipFile('huge.zip', { 'hello/hello.php': PLUGIN_MAIN });
+    Object.defineProperty(file, 'size', { value: ZIP_LIMITS.maxZipBytes + 1 });
+    const text = 'Could not import huge.zip: The zip is larger than 20 MB.';
+
+    await upload(user, file);
+    const first = await screen.findByText(text);
+    await upload(user, file);
+    const second = await screen.findByText(text);
+
+    expect(second).not.toBe(first);
   });
 });

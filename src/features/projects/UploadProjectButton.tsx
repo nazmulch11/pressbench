@@ -3,14 +3,12 @@ import { useRef } from 'react';
 import styles from './UploadProjectButton.module.css';
 import { useProjectUpload } from './useProjectUpload';
 
-export { importSummary } from './useProjectUpload';
-
 /**
  * "Upload plugin or theme": reads a WordPress plugin or theme zip and adds its folder to the project, then
  * opens its main file. The zip is untrusted input; `readProjectZip` checks every path and size first.
  */
 export function UploadProjectButton(): React.JSX.Element {
-  const { message, isBusy, upload, dismiss } = useProjectUpload();
+  const { message, messageId, isBusy, upload, dismiss } = useProjectUpload();
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -44,7 +42,7 @@ export function UploadProjectButton(): React.JSX.Element {
       />
       <div className={styles.live} aria-live="polite">
         {message === '' ? null : (
-          <div className={styles.message}>
+          <div key={messageId} className={styles.message}>
             <p className={styles.text}>{message}</p>
             <button type="button" className={styles.dismiss} onClick={dismiss}>
               Dismiss
