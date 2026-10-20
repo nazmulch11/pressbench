@@ -58,6 +58,9 @@ export function MonacoEditor(): React.JSX.Element | null {
       fontSize: 13,
       minimap: { enabled: false },
       quickSuggestions: { other: true, comments: false, strings: true },
+      // Monaco defaults to 'dimmed' on Linux only; the stock themes draw that number at 1.75:1 contrast,
+      // which fails WCAG AA (TC-ED-024). Same rendering on every platform.
+      renderFinalNewline: 'on',
       scrollBeyondLastLine: false,
       tabSize: 4,
       insertSpaces: false,

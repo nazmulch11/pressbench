@@ -100,6 +100,12 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Editor accessibility on Linux: Monaco draws the line number after a file's final newline in a faded colour on
+  Linux only (`renderFinalNewline: 'dimmed'`), at 1.75:1 contrast. The editor now renders it normally on every
+  platform (TC-ED-024). This failed CI on Chromium and Firefox after PR #4.
+- Ctrl+K in the editor now opens the command palette when the browser reports macOS. Monaco binds Ctrl+K to
+  "delete to end of line" there, which swallowed the shortcut in Safari when Ctrl rather than Cmd was used, and
+  in WebKit on Linux (GNOME Web, and Playwright's WebKit in CI), which sends a Mac user agent (TC-ED-025).
 - Dark-mode contrast of the primary button: new `--color-on-accent` token (white in light, near-black in dark).
 - Playwright no longer overrides the browsers' user agent: with the override, the Playground remote could not load
   its module web worker and never booted (see `docs/TESTING.md` section 5).

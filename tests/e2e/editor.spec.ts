@@ -125,6 +125,29 @@ test.describe('editor', () => {
     ).toBeVisible();
   });
 
+  test('TC-ED-025 Ctrl+K typed in the editor opens the command palette on every platform', async ({
+    page,
+    workspace,
+  }) => {
+    // Ctrl, not ControlOrMeta: the app accepts Ctrl+K everywhere, and a browser that reports macOS (Safari, and
+    // WebKit on Linux, which sends a Mac user agent) makes Monaco bind Ctrl+K to "delete to end of line".
+    await workspace.goto('/?debug=1');
+    await workspace.writeFile('my-plugin/assets/style.css', '.a{color:red}');
+    await workspace.openInEditor('style.css');
+    await workspace.focusEditorEnd();
+    await page.keyboard.type(' ');
+    await expect.poll(() => workspace.draft('my-plugin/assets/style.css')).toBe('.a{color:red} ');
+
+    await page.keyboard.press('Control+k');
+
+    await expect(workspace.paletteInput).toBeVisible();
+    await workspace.paletteInput.fill('format document');
+    await workspace.paletteInput.press('Enter');
+    await expect
+      .poll(() => workspace.draft('my-plugin/assets/style.css'))
+      .toBe('.a {\n\tcolor: red;\n}\n');
+  });
+
   test('TC-ED-010 loads Monaco only after a file is opened', async ({ page, workspace }) => {
     const scripts: string[] = [];
     page.on('request', (request) => {

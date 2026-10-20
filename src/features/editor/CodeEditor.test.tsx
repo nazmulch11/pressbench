@@ -52,7 +52,7 @@ const world = vi.hoisted(() => {
     pushUndoStop: vi.fn(),
   };
   const fakeMonaco = {
-    KeyMod: { CtrlCmd: 2048, Shift: 1024, Alt: 512 },
+    KeyMod: { CtrlCmd: 2048, Shift: 1024, Alt: 512, WinCtrl: 256 },
     KeyCode: { KeyS: 49, KeyF: 36, KeyK: 41 },
     languages: {
       registerCompletionItemProvider: vi.fn(() => ({ dispose: () => undefined })),
@@ -187,7 +187,8 @@ describe('CodeEditor', () => {
     expect(world.fakeMonaco.languages.registerCompletionItemProvider).toHaveBeenCalledTimes(1);
 
     const commands = world.actions.get('pressbench.commands');
-    expect(commands?.keybindings).toEqual([2048 | 41]);
+    // Cmd/Ctrl+K and plain Ctrl+K: Monaco takes Ctrl+K for itself when the browser reports macOS (TC-ED-025).
+    expect(commands?.keybindings).toEqual([2048 | 41, 256 | 41]);
     act(() => {
       commands?.run(world.fakeEditor);
     });
