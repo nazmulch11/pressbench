@@ -28,6 +28,11 @@ import {
 } from './layout';
 import { dropDrafts, moveItem, nextActiveTab, remapDrafts, remapPath, withoutDraft } from './tabs';
 
+/** Something the command palette asks the editor to do. */
+export interface EditorRequest {
+  readonly kind: 'format';
+}
+
 /** Something the command palette or a shortcut asks the file tree to start. */
 export type TreeRequest =
   | { readonly kind: 'new-file' | 'new-folder'; readonly parent: string }
@@ -50,6 +55,8 @@ export interface WorkspaceState {
   readonly treeRequest: (TreeRequest & { readonly serial: number }) | null;
   /** The tree's selected entry; new files from the palette go next to it. */
   readonly treeSelection: string | null;
+  /** Pending request for the editor plus a serial, so the editor reacts to the same request made twice. */
+  readonly editorRequest: (EditorRequest & { readonly serial: number }) | null;
 
   createFile: (parent: string, name: string) => Result<string, FsError>;
   createFolder: (parent: string, name: string) => Result<string, FsError>;
@@ -78,6 +85,8 @@ export interface WorkspaceState {
   requestTreeAction: (request: TreeRequest) => void;
   clearTreeRequest: () => void;
   setTreeSelection: (path: string | null) => void;
+  requestEditorAction: (request: EditorRequest) => void;
+  clearEditorRequest: () => void;
 }
 
 export type WorkspaceStore = StoreApi<WorkspaceState>;
@@ -160,6 +169,7 @@ export function createWorkspaceStore(options: WorkspaceStoreOptions = {}): Works
       isPaletteOpen: false,
       treeRequest: null,
       treeSelection: null,
+      editorRequest: null,
 
       createFile(parent, name) {
         const checked = checkName(parent, name);
@@ -289,6 +299,13 @@ export function createWorkspaceStore(options: WorkspaceStoreOptions = {}): Works
       },
       setTreeSelection: (path) => {
         set({ treeSelection: path });
+      },
+      requestEditorAction(request) {
+        requestSerial += 1;
+        set({ editorRequest: { ...request, serial: requestSerial } });
+      },
+      clearEditorRequest: () => {
+        set({ editorRequest: null });
       },
     };
   });

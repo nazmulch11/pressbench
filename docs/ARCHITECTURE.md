@@ -33,7 +33,7 @@ pressbench/
 ├── CHANGELOG.md
 ├── docs/                    # plan, standards, testing, ADRs, test cases
 ├── public/
-├── scripts/                 # build-time scripts (generate-wp-data.ts, docs-check.ts)
+├── scripts/                 # build-time scripts (generate-wp-data.ts + wp-data/ parsers, docs-check/)
 ├── src/
 │   ├── app/                 # app shell, routes, providers, error boundary
 │   ├── features/
@@ -53,7 +53,7 @@ pressbench/
 │   │   ├── logger/
 │   │   └── result.ts
 │   ├── stores/              # Zustand stores shared by features (workspace store, demo project)
-│   ├── data/                # generated: wp-functions.json, wp-hooks.json (+ source versions)
+│   ├── data/                # generated: wp-functions.json, wp-hooks.json (each with a `source` version block)
 │   └── ui/                  # shared components (Splitter, Dialog, Menu), tokens.css
 ├── templates/               # scaffold templates: plugin/, block-theme/, block/
 └── tests/
@@ -64,26 +64,30 @@ pressbench/
 
 ## 3. Key modules
 
-| Module                 | Responsibility                                                                 | Public API (sketch)                                                                                                                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lib/playground`       | Boot, run PHP, read/write files, activate plugins, navigate, persist           | `PlaygroundService` interface; `createWebPlaygroundService(options)` (browser); `createPlaygroundService({ connect })` (core, also used over `@wp-playground/cli` in Node); `createFakePlaygroundService()` for tests |
-| `lib/result`           | `Result<T, E>` with `ok()` / `err()` helpers                                   | Every service method that can fail returns a `Result`; nothing throws across a module boundary                                                                                                                        |
-| `features/preview`     | Phase 1: spike panel (versions, start, status, iframe); later the preview pane | `<PlaygroundPanel service={…} />`, `usePlaygroundState(service)`                                                                                                                                                      |
-| `lib/fs`               | In-memory project files, path validation, change events                        | `ProjectFs` with `read`, `write`, `rename`, `remove`, `list`, `onChange`                                                                                                                                              |
-| `lib/sync`             | Push `ProjectFs` changes into Playground, debounce, status                     | `createSync(fs, playground)` → `status$`, `flush()`                                                                                                                                                                   |
-| `lib/storage` (later)  | Save/load projects in OPFS; metadata in IndexedDB; quota                       | `ProjectRepository` with `list`, `load`, `save`, `remove`, `estimateQuota`                                                                                                                                            |
-| `features/editor`      | Monaco lifecycle, language mapping, WordPress completion and hover             | `<CodeEditor path=… />`, `registerWordPressProviders(monaco)`                                                                                                                                                         |
-| `features/debug-panel` | Parse PHP errors and debug.log, show and link to lines                         | `parseDebugLog(text)`, `<DebugPanel />`                                                                                                                                                                               |
-| `features/scaffolding` | Render templates, validate inputs                                              | `generateProject(kind, options)`                                                                                                                                                                                      |
-| `features/projects`    | Project list, zip import/export                                                | `importZip(file)`, `exportZip(project)`                                                                                                                                                                               |
-| `features/sharing`     | Encode/decode share links                                                      | `encodeShare(project)`, `decodeShare(hash)`                                                                                                                                                                           |
+| Module                 | Responsibility                                                                                     | Public API (sketch)                                                                                                                                                                                                   |
+| ---------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/playground`       | Boot, run PHP, read/write files, activate plugins, navigate, persist                               | `PlaygroundService` interface; `createWebPlaygroundService(options)` (browser); `createPlaygroundService({ connect })` (core, also used over `@wp-playground/cli` in Node); `createFakePlaygroundService()` for tests |
+| `lib/result`           | `Result<T, E>` with `ok()` / `err()` helpers                                                       | Every service method that can fail returns a `Result`; nothing throws across a module boundary                                                                                                                        |
+| `features/preview`     | Phase 1: spike panel (versions, start, status, iframe); later the preview pane                     | `<PlaygroundPanel service={…} />`, `usePlaygroundState(service)`                                                                                                                                                      |
+| `lib/fs`               | In-memory project files, path validation, change events                                            | `ProjectFs` with `read`, `write`, `rename`, `remove`, `list`, `onChange`                                                                                                                                              |
+| `lib/sync`             | Push `ProjectFs` changes into Playground, debounce, status                                         | `createSync(fs, playground)` → `status$`, `flush()`                                                                                                                                                                   |
+| `lib/storage` (later)  | Save/load projects in OPFS; metadata in IndexedDB; quota                                           | `ProjectRepository` with `list`, `load`, `save`, `remove`, `estimateQuota`                                                                                                                                            |
+| `features/editor`      | Monaco lifecycle (lazy), language mapping, WordPress completion and hover, save and format actions | `<CodeEditor />` (reads the active tab from the store), `languageForPath(path)`, `suggest(query, data)`, `registerWordPressProviders(monaco, data)`                                                                   |
+| `lib/wp-data`          | Types of the generated data and a cached loader that fetches `src/data/*.json` as assets           | `loadWordPressData()` → `Result<WordPressData, LoadError>`                                                                                                                                                            |
+| `lib/format`           | Prettier standalone (lazy plugins) with WordPress-style options                                    | `formatSource(path, source)` → `Result<string, FormatError>`; `canFormat(path)`                                                                                                                                       |
+| `features/debug-panel` | Parse PHP errors and debug.log, show and link to lines                                             | `parseDebugLog(text)`, `<DebugPanel />`                                                                                                                                                                               |
+| `features/scaffolding` | Render templates, validate inputs                                                                  | `generateProject(kind, options)`                                                                                                                                                                                      |
+| `features/projects`    | Project list, zip import/export                                                                    | `importZip(file)`, `exportZip(project)`                                                                                                                                                                               |
+| `features/sharing`     | Encode/decode share links                                                                          | `encodeShare(project)`, `decodeShare(hash)`                                                                                                                                                                           |
 
 ### Composition
 
 Features never import each other. `src/app/App.tsx` composes them: it creates the workspace store once (over
 `localStorage` preferences) and renders `<Workspace sidebar={<FileTree />} preview={<PlaygroundPanel />} />`. The
 tree and the tab bar talk through the store (open a file, follow a rename, ask the tree to start a "new file"
-from the palette), never through props across features.
+from the palette), never through props across features. The editor is a third slot: `main.tsx` passes
+`<CodeEditor />` (lazy Monaco) as `editor`; without it the workspace shows a plain text area, which is what
+component tests use because Monaco cannot run in jsdom.
 
 ## 4. Data flow: edit → preview
 
@@ -99,3 +103,4 @@ from the palette), never through props across features.
 Architecture decisions are recorded in [adr/](adr/). Current:
 
 - [ADR 0001: Browser-first on WordPress Playground](adr/0001-browser-first-on-playground.md)
+- [ADR 0002: No PHP language server in the browser for the MVP](adr/0002-php-language-server-in-a-web-worker.md)

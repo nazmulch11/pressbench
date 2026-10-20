@@ -53,11 +53,13 @@ Playground is the riskiest dependency. Upgrade it alone, never bundled with othe
 
 Regenerate when a new WordPress major version is released.
 
-1. Update `php-stubs/wordpress-stubs` and `@wp-hooks/wordpress-core`.
-2. `npm run generate:wp-data`.
-3. Review the diff of `src/data/*.json`: new functions and hooks expected; removals need a look.
-4. The generated files record their source versions; confirm they changed.
-5. Run TC-ED-003 to TC-ED-008.
+1. Bump `STUBS_VERSION` in `scripts/wp-data/sources.ts` to the new `php-stubs/wordpress-stubs` tag and update the
+   `@wp-hooks/wordpress-core` dev dependency.
+2. `npm run generate:wp-data` (downloads the tag into `scripts/.cache/`; `--stubs <file>` uses a local copy).
+3. Review the diff of `src/data/*.json`: new functions and hooks expected; removals need a look. The files are
+   one entry per line so the diff is readable.
+4. The generated files record their source versions in their `source` block; TC-ED-017 checks they match the pins.
+5. Run `npm test` (TC-ED-003 to TC-ED-007, TC-ED-015 to TC-ED-018) and the editor e2e cases (TC-ED-008, 011, 012).
 
 ## 3. Updating docs
 

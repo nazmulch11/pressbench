@@ -10,3 +10,4 @@ blob-report/
 !.env.example
 .DS_Store
 *.log
+scripts/.cache/

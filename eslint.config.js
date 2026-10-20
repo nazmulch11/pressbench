@@ -66,6 +66,9 @@ export default defineEslintConfig(
     },
     settings: {
       'import-x/resolver-next': [createTypeScriptImportResolver({ alwaysTryTypes: true })],
+      // Vite worker imports (`…/x.worker?worker`) resolve to a virtual module whose default export the
+      // resolver cannot see, so the worker files' own exports are not analysed.
+      'import-x/ignore': ['\\.worker\\.js$'],
     },
     rules: {
       'no-console': 'error',
@@ -75,6 +78,8 @@ export default defineEslintConfig(
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-non-null-assertion': 'error',
       'import-x/no-cycle': 'error',
+      // Vite worker imports (`…/x.worker?worker`) are real modules the resolver cannot see past the query.
+      'import-x/no-unresolved': ['error', { ignore: ['\\?worker$'] }],
       'import-x/no-default-export': 'off',
       'import-x/order': [
         'error',

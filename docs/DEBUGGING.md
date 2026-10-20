@@ -59,7 +59,8 @@ log.debug('write queued', { path, bytes: content.length });
 
 ### Inside Playground
 
-From the console with `?debug=1`, `window.__PRESSBENCH__` exposes two handles once WordPress is running:
+From the console with `?debug=1`, `window.__PRESSBENCH__` exposes `workspaceStore` (the Zustand store: files,
+tabs, drafts; `getState()`, `subscribe()`) from the start, and two more handles once WordPress is running:
 `playgroundService` (Pressbench's wrapper, every call returns a `Result`) and `playground` (the raw
 `@wp-playground/client` instance):
 

@@ -170,6 +170,9 @@ The custom fixture in `tests/e2e/fixtures/pressbench.ts` must:
 - Attach Pressbench's own logs (`window.__PRESSBENCH_LOGS__`, available when `?debug=1`) to the report on failure.
 - Provide the `workspace` page object (`tests/e2e/pages/workspace.ts`): tree items, tabs, editor, palette, and
   helpers such as `createFile()` and `dragTreeItem()` (pointer-event drag with `mouse.move` / `down` / `up`).
+  For Monaco: `openInEditor()`, `focusEditorEnd()`, the `monaco`, `suggestWidget` and `hoverWidget` locators, and
+  `draft()` / `savedContent()` which read the store through `?debug=1`. Monaco's accessible text box
+  (`Editor: <path>`) is zero-width, so assert `toBeAttached()` on it and `toBeVisible()` on `monaco`.
 
 ## 7. Manual checklist (real browser)
 

@@ -19,6 +19,7 @@ All project rules live in AGENTS.md and are imported here so Claude Code and oth
   `npm run test:e2e:repeat` in the foreground and read the full result, not just the exit code.
 - **Subagents:** for review, use a separate agent that has not seen the implementation to check the diff against
   `docs/CODING_STANDARDS.md` and the test cases.
-- **Never** edit generated files in `src/data/` by hand; run `npm run generate:wp-data`.
+- **Never** edit generated files in `src/data/` by hand; run `npm run generate:wp-data` (first run downloads the
+  pinned WordPress stubs into `scripts/.cache/`; pass `--stubs <file>` when offline).
 - **Updating this file:** only Claude-specific notes go here. General rules go in `AGENTS.md`
   (see `docs/UPDATING.md` section 4).
