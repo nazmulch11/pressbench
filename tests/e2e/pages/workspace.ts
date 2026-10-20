@@ -99,6 +99,16 @@ export class WorkspacePage {
     );
   }
 
+  /** Replaces a file's saved content through the store (a seed for a test); needs `?debug=1`. */
+  async writeFile(path: string, content: string): Promise<void> {
+    await this.page.evaluate(
+      ([target, text]) => {
+        window.__PRESSBENCH__?.workspaceStore?.getState().fs.write(target ?? '', text ?? '');
+      },
+      [path, content],
+    );
+  }
+
   /** The saved content of a file from the store; needs `?debug=1`. */
   async savedContent(path: string): Promise<string | undefined> {
     return this.page.evaluate((target) => {

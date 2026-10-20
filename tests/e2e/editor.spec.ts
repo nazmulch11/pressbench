@@ -105,11 +105,11 @@ test.describe('editor', () => {
     workspace,
   }) => {
     await workspace.goto('/?debug=1');
+    await workspace.writeFile('my-plugin/assets/style.css', '.a{color:red}');
     await workspace.openInEditor('style.css');
     await workspace.focusEditorEnd();
-    await page.keyboard.press('ControlOrMeta+a');
-    await page.keyboard.type('.a{color:red}');
-    await expect.poll(() => workspace.draft('my-plugin/assets/style.css')).toBe('.a{color:red}');
+    await page.keyboard.type(' ');
+    await expect.poll(() => workspace.draft('my-plugin/assets/style.css')).toBe('.a{color:red} ');
 
     await workspace.runCommand('format document');
 

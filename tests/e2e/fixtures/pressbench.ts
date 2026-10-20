@@ -74,7 +74,9 @@ export const test = base.extend<PressbenchFixtures>({
           .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')
           .map(
             (violation) =>
-              `${violation.id}: ${violation.help} (${String(violation.nodes.length)} nodes)`,
+              `${violation.id}: ${violation.help} (${String(violation.nodes.length)} nodes): ${violation.nodes
+                .map((node) => `${node.target.join(' ')} — ${node.failureSummary ?? ''}`)
+                .join('; ')}`,
           );
         expect(serious, 'serious or critical accessibility violations').toEqual([]);
       },
