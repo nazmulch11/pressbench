@@ -157,6 +157,20 @@ Playwright's user-agent override in place, the WordPress Playground remote canno
 the cross-origin iframe and boot never completes (found in Phase 1 on Chromium 156). The browsers' own user agents
 are used instead; viewport and screen presets are kept.
 
+The browsers' own user agents differ by host, and Monaco reads its platform from the user agent: on Linux it draws
+the final line number faded, and Playwright's Linux WebKit sends a **macOS** user agent, so Monaco uses Mac key
+bindings there. `tests/e2e/editor-linux.spec.ts` therefore sets a Linux user agent per engine (editor tests only;
+the Playground remote does not boot under an override), and shortcut tests press `Control+…` explicitly where the
+app promises Ctrl on every platform.
+
+To reproduce CI's Linux browsers on a Mac, run the suite in Playwright's official image (Docker required):
+
+```bash
+docker run --rm --ipc=host -v "$PWD":/src:ro mcr.microsoft.com/playwright:v1.64.1-noble bash -lc 'mkdir /work && cd /src && tar --exclude=./node_modules --exclude=./.git -cf - . | (cd /work && tar -xf -) && cd /work && npm ci && CI=1 npx playwright test --repeat-each=3'
+```
+
+Keep the image tag equal to the `@playwright/test` version.
+
 ## 6. Shared E2E guards
 
 The custom fixture in `tests/e2e/fixtures/pressbench.ts` must:

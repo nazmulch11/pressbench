@@ -11,8 +11,9 @@ export const FORMAT_ACTION_ID = 'pressbench.format';
 type KeyApi = Pick<typeof Monaco, 'KeyMod' | 'KeyCode'>;
 
 /**
- * Registers the editor's own actions: save (Ctrl/Cmd+S), show commands (Ctrl/Cmd+K, which Monaco would
- * otherwise swallow as a chord prefix) and format (Shift+Alt+F). `notify` shows a sentence under the editor.
+ * Registers the editor's own actions: save (Ctrl/Cmd+S), show commands (Ctrl/Cmd+K and plain Ctrl+K, which
+ * Monaco would otherwise swallow as a chord prefix or, on macOS, as "delete to end of line") and format
+ * (Shift+Alt+F). `notify` shows a sentence under the editor.
  */
 export function registerEditorActions(
   editor: Monaco.editor.IStandaloneCodeEditor,
@@ -31,7 +32,13 @@ export function registerEditorActions(
   editor.addAction({
     id: 'pressbench.commands',
     label: 'Show commands',
-    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK],
+    // Ctrl+K as well as Cmd+K: the shell accepts either modifier everywhere, but when the browser reports macOS
+    // (Safari, and WebKit on Linux, which sends a Mac user agent) Monaco binds Ctrl+K to "delete to end of line"
+    // and swallows it (TC-ED-025).
+    keybindings: [
+      monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
+      monaco.KeyMod.WinCtrl | monaco.KeyCode.KeyK,
+    ],
     run: () => {
       api.getState().openPalette();
     },
