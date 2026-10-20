@@ -7,7 +7,8 @@ WordPress and PHP versions, and export it. Nothing to install. WordPress runs in
 > Status: Phase 3 (editor) built. The app opens with a demo plugin in a resizable workspace: file tree
 > (create, rename, move, delete; mouse and keyboard), tabs with unsaved markers, a command palette (Ctrl/Cmd+K), a
 > Monaco editor with WordPress function and hook completion, hover docs, Ctrl/Cmd+S and Prettier formatting for
-> JS/CSS, and the Phase 1 Playground panel in the preview area. Live preview arrives in Phase 4. See the
+> JS/CSS, "Upload plugin or theme" for existing plugin and theme zips, and the Phase 1 Playground panel in the preview
+> area. Live preview arrives in Phase 4. See the
 > [implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
 ## Quick start

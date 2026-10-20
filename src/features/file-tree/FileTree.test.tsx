@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
@@ -213,5 +213,43 @@ describe('FileTree', () => {
     store.getState().requestTreeAction({ kind: 'rename', path: 'my-plugin/assets/app.js' });
 
     expect(await screen.findByRole('textbox', { name: 'New name' })).toHaveValue('app.js');
+  });
+
+  it('TC-PRJ-017 reveals an imported project: folders expanded, main file selected and focused', () => {
+    const { store } = renderTree();
+
+    act(() => {
+      store
+        .getState()
+        .importProject(
+          'hello',
+          { 'hello/src/admin/hello.php': '<?php', 'hello/readme.txt': 'Hi' },
+          'hello/src/admin/hello.php',
+        );
+    });
+
+    expect(item('hello')).toHaveAttribute('aria-expanded', 'true');
+    expect(item('src')).toHaveAttribute('aria-expanded', 'true');
+    expect(item('admin')).toHaveAttribute('aria-expanded', 'true');
+    expect(item('hello.php')).toHaveAttribute('aria-selected', 'true');
+    expect(item('hello.php')).toHaveFocus();
+    expect(store.getState().treeRequest).toBeNull();
+  });
+
+  it('TC-PRJ-017a reveals an import made while the tree was hidden once the tree is shown', () => {
+    const store = createWorkspaceStore({ seed: SEED });
+    store
+      .getState()
+      .importProject('later', { 'later/inc/later.php': '<?php' }, 'later/inc/later.php');
+
+    render(
+      <WorkspaceStoreProvider store={store}>
+        <FileTree />
+      </WorkspaceStoreProvider>,
+    );
+
+    expect(item('later.php')).toHaveAttribute('aria-selected', 'true');
+    expect(item('later.php')).toHaveFocus();
+    expect(store.getState().treeRequest).toBeNull();
   });
 });

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 
 import { FileTree } from '@/features/file-tree';
 import { PlaygroundPanel } from '@/features/preview';
+import { UploadProjectButton } from '@/features/projects';
 import { Workspace } from '@/features/workspace';
 import { createLogger } from '@/lib/logger';
 import type { PlaygroundService } from '@/lib/playground';
@@ -36,6 +37,7 @@ export function App({ playground, store, editor }: AppProps): React.JSX.Element 
         sidebar={<FileTree />}
         editor={editor}
         preview={<PlaygroundPanel service={playground} />}
+        headerActions={<UploadProjectButton />}
       />
     </WorkspaceStoreProvider>
   );

@@ -3,6 +3,8 @@ import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+import { reportIgnorePatterns } from './scripts/report-dirs.ts';
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -13,6 +15,11 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    watch: {
+      // Test reports are HTML pages inside the project root; when Vitest or Playwright rewrote them, the dev server
+      // reloaded the open app and wiped the in-memory project and WordPress (TC-FND-011).
+      ignored: reportIgnorePatterns(fileURLToPath(new URL('.', import.meta.url))),
+    },
   },
   preview: {
     port: 4173,

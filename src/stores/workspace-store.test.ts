@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { createPreferences } from '@/lib/storage';
 
@@ -295,5 +295,137 @@ describe('workspace store: editor requests', () => {
     store.getState().openFile('plugin/plugin.php');
     format?.run(store.getState());
     expect(store.getState().editorRequest).toMatchObject({ kind: 'format' });
+  });
+});
+
+describe('workspace store: importing a project', () => {
+  const FILES = {
+    'hello/hello.php': '<?php /* Plugin Name: Hello */',
+    'hello/assets/style.css': '.a {}',
+  };
+
+  it('TC-PRJ-015a writes every file and opens the main file', () => {
+    const store = makeStore();
+
+    const result = store.getState().importProject('hello', FILES, 'hello/hello.php');
+
+    expect(result).toEqual({ ok: true, value: 'hello' });
+    expect(store.getState().fs.read('hello/hello.php')).toEqual({
+      ok: true,
+      value: FILES['hello/hello.php'],
+    });
+    expect(store.getState().fs.read('hello/assets/style.css')).toEqual({
+      ok: true,
+      value: '.a {}',
+    });
+    expect(store.getState().entries.map((entry) => entry.path)).toContain('hello/assets');
+    expect(store.getState().activeTab).toBe('hello/hello.php');
+    expect(store.getState().treeSelection).toBe('hello/hello.php');
+    expect(store.getState().treeRequest).toMatchObject({ kind: 'reveal', path: 'hello/hello.php' });
+  });
+
+  it('TC-PRJ-015b refuses a folder that already exists and changes nothing', () => {
+    const store = makeStore();
+    const before = store.getState().fs.entries();
+
+    const result = store
+      .getState()
+      .importProject('plugin', { 'plugin/new.php': '<?php' }, 'plugin/new.php');
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        kind: 'exists',
+        path: 'plugin',
+        message: 'A folder named "plugin" already exists. Rename or delete it, then upload again.',
+      },
+    });
+    expect(store.getState().fs.entries()).toEqual(before);
+    expect(store.getState().tabs).toEqual([]);
+  });
+
+  it('TC-PRJ-015c refuses files outside the folder and leaves nothing behind', () => {
+    const store = makeStore();
+    const before = store.getState().fs.entries();
+
+    const result = store
+      .getState()
+      .importProject('hello', { 'hello/a.php': '<?php', 'other/b.php': '<?php' }, 'hello/a.php');
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { kind: 'invalid-path', path: 'other/b.php' },
+    });
+    expect(store.getState().fs.entries()).toEqual(before);
+  });
+
+  it('TC-PRJ-015d removes a half-written folder when a write throws, and reports it', () => {
+    const store = makeStore();
+    const before = store.getState().fs.entries();
+    const fs = store.getState().fs;
+    const write = fs.write.bind(fs);
+    let calls = 0;
+    vi.spyOn(fs, 'write').mockImplementation((path, content) => {
+      calls += 1;
+      if (calls === 2) {
+        throw new RangeError('Maximum call stack size exceeded');
+      }
+      return write(path, content);
+    });
+
+    const result = store
+      .getState()
+      .importProject('hello', { 'hello/a.php': '<?php', 'hello/b.php': '<?php' }, 'hello/a.php');
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        kind: 'invalid-path',
+        path: 'hello',
+        message: 'The project could not be added: Maximum call stack size exceeded',
+      },
+    });
+    expect(store.getState().fs.entries()).toEqual(before);
+    expect(store.getState().tabs).toEqual([]);
+  });
+
+  it('TC-PRJ-015e refuses a folder whose name differs only in case from an existing one', () => {
+    const store = makeStore();
+    const before = store.getState().fs.entries();
+
+    const result = store
+      .getState()
+      .importProject('Plugin', { 'Plugin/p.php': '<?php' }, 'Plugin/p.php');
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        kind: 'exists',
+        message:
+          'A folder named "plugin" already exists (names are compared without case). Rename or delete it, then upload again.',
+      },
+    });
+    expect(store.getState().fs.entries()).toEqual(before);
+  });
+
+  it('TC-PRJ-015f refreshes the file list once per import, not once per file', () => {
+    const store = makeStore();
+    const files: Record<string, string> = {};
+    for (let index = 0; index < 50; index += 1) {
+      files[`big/f${String(index)}.php`] = '<?php';
+    }
+    let entryUpdates = 0;
+    store.subscribe((state, previous) => {
+      if (state.entries !== previous.entries) {
+        entryUpdates += 1;
+      }
+    });
+
+    store.getState().importProject('big', files, 'big/f0.php');
+
+    expect(entryUpdates).toBe(1);
+    expect(store.getState().entries.filter((entry) => entry.path.startsWith('big/'))).toHaveLength(
+      50,
+    );
   });
 });

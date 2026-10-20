@@ -55,24 +55,24 @@ AI agents follow them too.
 Versions were checked on npm on 2026-10-19. Pin exact versions in `package.json` during Phase 0 and change them only
 through the process in [UPDATING.md](UPDATING.md).
 
-| Concern                        | Choice                                           | Version at planning | Why                                                                                      |
-| ------------------------------ | ------------------------------------------------ | ------------------- | ---------------------------------------------------------------------------------------- |
-| Language                       | TypeScript (strict)                              | 6.0.x               | `typescript-eslint` 8.x supports TypeScript below 6.1; do not move to TS 7 until it does |
-| UI                             | React                                            | 19.x                | Large ecosystem, works with Monaco wrapper                                               |
-| Build / dev server             | Vite                                             | 8.x                 | Fast dev server, simple config                                                           |
-| Editor                         | Monaco via `@monaco-editor/react`                | 0.57 / 4.7          | The editor inside VS Code                                                                |
-| WordPress runtime              | `@wp-playground/client`                          | 3.1.x               | Official Playground client: boot, run PHP, write files                                   |
-| Runtime in Node tests          | `@wp-playground/cli`                             | 3.1.x               | Run Playground in Node for fast integration tests                                        |
-| State                          | Zustand                                          | 5.x                 | Small, testable stores                                                                   |
-| Hook data                      | `@wp-hooks/wordpress-core`                       | 1.13.x              | JSON of WordPress core actions and filters for autocomplete                              |
-| Function data                  | `php-stubs/wordpress-stubs` (Composer)           | latest              | Source for function signatures, parsed at build time                                     |
-| Zip import/export              | JSZip                                            | 3.10.x              | Read and write plugin zips in the browser                                                |
-| Unit / component tests         | Vitest + Testing Library                         | 5.x / 16.x          | Vite-native test runner                                                                  |
-| End-to-end tests               | Playwright                                       | 1.64.x              | Real Chromium, Firefox and WebKit, traces and videos                                     |
-| Accessibility tests            | `@axe-core/playwright`                           | 4.14.x              | Automated a11y checks inside E2E runs                                                    |
-| Lint / format                  | ESLint 10 + typescript-eslint 8, Prettier 3      |                     | Enforced in CI and pre-commit                                                            |
-| Git hooks                      | Husky + lint-staged                              | 9.x / 17.x          | Block bad commits locally                                                                |
-| PHP standards (generated code) | PHPCS + WordPress Coding Standards, Plugin Check |                     | Scaffolded code must be clean                                                            |
+| Concern                        | Choice                                           | Version at planning | Why                                                                                                                 |
+| ------------------------------ | ------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Language                       | TypeScript (strict)                              | 6.0.x               | `typescript-eslint` 8.x supports TypeScript below 6.1; do not move to TS 7 until it does                            |
+| UI                             | React                                            | 19.x                | Large ecosystem, works with Monaco wrapper                                                                          |
+| Build / dev server             | Vite                                             | 8.x                 | Fast dev server, simple config                                                                                      |
+| Editor                         | Monaco via `@monaco-editor/react`                | 0.57 / 4.7          | The editor inside VS Code                                                                                           |
+| WordPress runtime              | `@wp-playground/client`                          | 3.1.x               | Official Playground client: boot, run PHP, write files                                                              |
+| Runtime in Node tests          | `@wp-playground/cli`                             | 3.1.x               | Run Playground in Node for fast integration tests                                                                   |
+| State                          | Zustand                                          | 5.x                 | Small, testable stores                                                                                              |
+| Hook data                      | `@wp-hooks/wordpress-core`                       | 1.13.x              | JSON of WordPress core actions and filters for autocomplete                                                         |
+| Function data                  | `php-stubs/wordpress-stubs` (Composer)           | latest              | Source for function signatures, parsed at build time                                                                |
+| Zip import/export              | fflate                                           | 0.8.x               | Read and write plugin zips; shows each entry's raw name and size before unpacking (JSZip hides both, see CHANGELOG) |
+| Unit / component tests         | Vitest + Testing Library                         | 5.x / 16.x          | Vite-native test runner                                                                                             |
+| End-to-end tests               | Playwright                                       | 1.64.x              | Real Chromium, Firefox and WebKit, traces and videos                                                                |
+| Accessibility tests            | `@axe-core/playwright`                           | 4.14.x              | Automated a11y checks inside E2E runs                                                                               |
+| Lint / format                  | ESLint 10 + typescript-eslint 8, Prettier 3      |                     | Enforced in CI and pre-commit                                                                                       |
+| Git hooks                      | Husky + lint-staged                              | 9.x / 17.x          | Block bad commits locally                                                                                           |
+| PHP standards (generated code) | PHPCS + WordPress Coding Standards, Plugin Check |                     | Scaffolded code must be clean                                                                                       |
 
 ---
 
@@ -330,7 +330,9 @@ Tasks:
 
 1. Project list: create, open, rename, duplicate, delete (with confirm).
 2. Persist project files to OPFS; metadata (name, versions, last opened) to IndexedDB.
-3. Import a `.zip` of a plugin or theme; detect type from headers; reject unsafe paths (`../`).
+3. Import a `.zip` of a plugin or theme; detect type from headers; reject unsafe paths (`../`). **Done early
+   (2026-10-20):** "Upload plugin or theme" in the header, TC-PRJ-005 to 007 and 011 to 017. Imported files are in
+   memory until task 2 lands, and reach WordPress once Phase 4 syncs the project.
 4. Export a WordPress-installable `.zip` with the right top-level folder.
 5. Storage quota warning and "export everything" safety button.
 
@@ -402,17 +404,17 @@ Update this table whenever test cases are added or automated. CI's `npm run docs
 
 | Area        | Test case file    | Prefix | Cases planned | Manual by design | Automated so far |
 | ----------- | ----------------- | ------ | ------------- | ---------------- | ---------------- |
-| Foundation  | 00-foundation.md  | TC-FND | 10            | 1                | 9                |
+| Foundation  | 00-foundation.md  | TC-FND | 11            | 1                | 10               |
 | Playground  | 01-playground.md  | TC-PG  | 14            | 0                | 14               |
 | Workspace   | 02-workspace.md   | TC-WS  | 25            | 0                | 25               |
 | Editor      | 03-editor.md      | TC-ED  | 25            | 0                | 25               |
 | Runtime     | 04-runtime.md     | TC-RT  | 9             | 0                | 0                |
 | Scaffolding | 05-scaffolding.md | TC-SC  | 9             | 0                | 0                |
 | Debug panel | 06-debug-panel.md | TC-DBG | 7             | 0                | 0                |
-| Projects    | 07-projects.md    | TC-PRJ | 10            | 1                | 0                |
+| Projects    | 07-projects.md    | TC-PRJ | 17            | 1                | 10               |
 | Sharing     | 08-sharing.md     | TC-SH  | 5             | 0                | 0                |
 | Hardening   | 09-hardening.md   | TC-HD  | 7             | 4                | 0                |
-| **Total**   |                   |        | **121**       | **6**            | **73**           |
+| **Total**   |                   |        | **129**       | **6**            | **84**           |
 
 ---
 

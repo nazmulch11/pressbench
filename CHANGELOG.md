@@ -7,6 +7,20 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- "Upload plugin or theme" in the header: choose a WordPress plugin or theme `.zip` and its folder appears in the
+  file tree, expanded, with its main file open. The type is detected from the `Plugin Name:` or `Theme Name:`
+  header. The zip is treated as untrusted. Absolute, `..`, backslash, Windows-reserved, empty, over-long, deeply
+  nested, invisible-character and duplicate names are refused. Zips over 20 MB, over 2,000 files, any file over 5 MB
+  unpacked, or over 25 MB in total are refused before anything is unpacked. Pressbench reads the zip's directory
+  itself (`src/lib/zip/zip-archive.ts`): entries sharing data, sizes that do not match, encrypted and Zip64 entries
+  are refused, and inflating stops as soon as a file outgrows its declared size, so a lying zip cannot exhaust
+  memory or CPU. macOS junk (`__MACOSX/`, `.DS_Store`) is ignored, and binary files (images, fonts, `.mo`) are skipped
+  and listed, since the editor holds text only. An existing folder of the same name, compared without case, is never overwritten
+  (TC-PRJ-005 to 007, 011 to 017). Uploaded files reach WordPress in the preview once Phase 4 syncs the project.
+- `fflate` 0.8.3 (MIT, about 8 KB gzipped for unzipping, loaded only when a zip is uploaded; actively maintained)
+  instead of JSZip, which the plan named: Pressbench reads the zip directory itself and uses fflate's streaming
+  inflater, which can be stopped mid-file; JSZip rewrites `../` in names and keeps sizes in private fields.
+
 - Phase 3 editor (`src/features/editor`): Monaco replaces the placeholder text area. It is lazy-loaded (its own
   `monaco` chunk, requested only once a file is open) and bundled from npm with Vite web workers, no CDN.
   Highlighting for PHP, JavaScript, TypeScript, JSX/TSX, CSS, SCSS, HTML, JSON and Markdown; the theme follows
@@ -100,6 +114,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The dev server no longer watches `coverage/`, `playwright-report/`, `test-results/` or `blob-report/`. Running the
+  tests rewrote the HTML reports there, which reloaded the open app and wiped the in-memory project and WordPress,
+  including an uploaded plugin (TC-FND-011). The ignore paths use forward slashes, so this also holds on Windows.
 - Editor accessibility on Linux: Monaco draws the line number after a file's final newline in a faded colour on
   Linux only (`renderFinalNewline: 'dimmed'`), at 1.75:1 contrast. The editor now renders it normally on every
   platform (TC-ED-024). This failed CI on Chromium and Firefox after PR #4.

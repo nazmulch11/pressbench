@@ -1,5 +1,15 @@
 import type { TreeRow } from '@/lib/fs';
 
+/** `expanded` plus every folder above `path` (`a/b/c.php` adds `a` and `a/b`). */
+export function withAncestors(expanded: ReadonlySet<string>, path: string): ReadonlySet<string> {
+  const next = new Set(expanded);
+  const segments = path.split('/');
+  for (let depth = 1; depth < segments.length; depth += 1) {
+    next.add(segments.slice(0, depth).join('/'));
+  }
+  return next;
+}
+
 /** The expanded set after `from` (and everything below it) became `to`. */
 export function remapExpanded(
   expanded: ReadonlySet<string>,
