@@ -32,12 +32,19 @@
   font-size: 0.8125rem;
 }
 
+.headerActions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
 .commandsButton {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   min-height: 1.75rem;
-  margin-left: auto;
   padding: 0 var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);

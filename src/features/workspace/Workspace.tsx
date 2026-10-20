@@ -20,13 +20,20 @@ export interface WorkspaceProps {
    * falls back to a plain text area, which is what component tests render.
    */
   editor?: ReactNode;
+  /** Extra header buttons before "Commands" (the upload button from `features/projects`). */
+  headerActions?: ReactNode;
 }
 
 /**
  * The IDE layout: header, file tree, editor column (tabs, editor, bottom panel) and preview, split by
  * keyboard-operable splitters whose sizes are remembered per browser.
  */
-export function Workspace({ sidebar, preview, editor }: WorkspaceProps): React.JSX.Element {
+export function Workspace({
+  sidebar,
+  preview,
+  editor,
+  headerActions,
+}: WorkspaceProps): React.JSX.Element {
   const api = useWorkspaceStoreApi();
   const layout = useWorkspaceStore((state) => state.layout);
   useShortcuts();
@@ -44,15 +51,18 @@ export function Workspace({ sidebar, preview, editor }: WorkspaceProps): React.J
       <header className={styles.header}>
         <h1 className={styles.title}>Pressbench</h1>
         <p className={styles.tagline}>Browser IDE for WordPress plugins and themes</p>
-        <button
-          type="button"
-          className={styles.commandsButton}
-          onClick={() => {
-            api.getState().openPalette();
-          }}
-        >
-          Commands <kbd className={styles.kbd}>Ctrl/Cmd+K</kbd>
-        </button>
+        <div className={styles.headerActions}>
+          {headerActions}
+          <button
+            type="button"
+            className={styles.commandsButton}
+            onClick={() => {
+              api.getState().openPalette();
+            }}
+          >
+            Commands <kbd className={styles.kbd}>Ctrl/Cmd+K</kbd>
+          </button>
+        </div>
       </header>
       <main className={styles.main} style={{ gridTemplateColumns: columns }}>
         {layout.visible.sidebar ? (

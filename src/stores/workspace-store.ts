@@ -36,7 +36,9 @@ export interface EditorRequest {
 /** Something the command palette or a shortcut asks the file tree to start. */
 export type TreeRequest =
   | { readonly kind: 'new-file' | 'new-folder'; readonly parent: string }
-  | { readonly kind: 'rename'; readonly path: string };
+  | { readonly kind: 'rename'; readonly path: string }
+  /** Expand the folders above `path`, then select and focus it (after an upload). */
+  | { readonly kind: 'reveal'; readonly path: string };
 
 export interface WorkspaceState {
   readonly fs: ProjectFs;
@@ -63,6 +65,15 @@ export interface WorkspaceState {
   renameEntry: (path: string, name: string) => Result<string, FsError>;
   moveEntry: (path: string, targetDirectory: string) => Result<string, FsError>;
   removeEntry: (path: string) => Result<void, FsError>;
+  /**
+   * Adds a whole project folder (an uploaded plugin or theme) and opens `mainFile`. Refuses a folder that exists
+   * and any path outside it; on failure nothing is left behind.
+   */
+  importProject: (
+    folder: string,
+    files: Readonly<Record<string, string>>,
+    mainFile: string,
+  ) => Result<string, FsError>;
   saveFile: (path: string) => Result<void, FsError>;
 
   openFile: (path: string) => void;
@@ -186,6 +197,54 @@ export function createWorkspaceStore(options: WorkspaceStoreOptions = {}): Works
         }
         get().openFile(path);
         return ok(path);
+      },
+      importProject(folder, files, mainFile) {
+        const checked = checkName('', folder);
+        if (!checked.ok) {
+          return checked;
+        }
+        if (fs.exists(folder)) {
+          return err({
+            kind: 'exists',
+            path: folder,
+            message: `A folder named "${folder}" already exists. Rename or delete it, then upload again.`,
+          });
+        }
+        const outside = Object.keys(files).find((path) => !isAncestor(folder, path));
+        if (outside !== undefined) {
+          return err({
+            kind: 'invalid-path',
+            path: outside,
+            message: `"${outside}" is outside the folder "${folder}".`,
+          });
+        }
+        const rollBack = (): void => {
+          if (fs.exists(folder)) {
+            fs.remove(folder);
+          }
+        };
+        try {
+          for (const [path, content] of Object.entries(files)) {
+            const written = fs.write(path, content);
+            if (!written.ok) {
+              rollBack();
+              return written;
+            }
+          }
+        } catch (error: unknown) {
+          // Nothing half-written may stay behind, whatever went wrong.
+          rollBack();
+          const reason = error instanceof Error ? error.message : String(error);
+          return err({
+            kind: 'invalid-path',
+            path: folder,
+            message: `The project could not be added: ${reason}`,
+          });
+        }
+        get().openFile(mainFile);
+        set({ treeSelection: mainFile });
+        get().requestTreeAction({ kind: 'reveal', path: mainFile });
+        return ok(folder);
       },
       createFolder(parent, name) {
         const checked = checkName(parent, name);

@@ -8,7 +8,12 @@ import { Menu } from '@/ui/Menu';
 
 import styles from './FileTree.module.css';
 import { treeMenuItems, type MenuTarget } from './menu-items';
-import { menuPositionFor, nextFocusAfterDelete, remapExpanded } from './tree-helpers';
+import {
+  menuPositionFor,
+  nextFocusAfterDelete,
+  remapExpanded,
+  withAncestors,
+} from './tree-helpers';
 import { treeKeyAction } from './tree-keys';
 import { DeleteDialog, MoveDialog } from './TreeDialogs';
 import { TreeRows, type TreeEditing } from './TreeRows';
@@ -88,12 +93,15 @@ export function FileTree(): React.JSX.Element {
         }
         if (request.kind === 'rename') {
           setEditing({ mode: 'rename', path: request.path });
+        } else if (request.kind === 'reveal') {
+          setExpanded((current) => withAncestors(current, request.path));
+          focusItem(request.path);
         } else {
           startCreate(request.kind === 'new-file' ? 'file' : 'directory', request.parent);
         }
         state.clearTreeRequest();
       }),
-    [api, startCreate],
+    [api, startCreate, focusItem],
   );
 
   const moveTo = useCallback(

@@ -48,6 +48,7 @@ pressbench/
 │   ├── lib/
 │   │   ├── playground/      # the ONLY place that imports @wp-playground/*
 │   │   ├── fs/              # ProjectFs: file map, path validation, tree model
+│   │   ├── zip/             # readProjectZip: untrusted plugin/theme zips → project files
 │   │   ├── storage/         # the ONLY place that touches OPFS / IndexedDB; also localStorage preferences
 │   │   ├── sync/            # ProjectFs → Playground sync, debounce
 │   │   ├── logger/
@@ -77,7 +78,8 @@ pressbench/
 | `lib/format`           | Prettier standalone (lazy plugins) with WordPress-style options                                    | `formatSource(path, source)` → `Result<string, FormatError>`; `canFormat(path)`                                                                                                                                       |
 | `features/debug-panel` | Parse PHP errors and debug.log, show and link to lines                                             | `parseDebugLog(text)`, `<DebugPanel />`                                                                                                                                                                               |
 | `features/scaffolding` | Render templates, validate inputs                                                                  | `generateProject(kind, options)`                                                                                                                                                                                      |
-| `features/projects`    | Project list, zip import/export                                                                    | `importZip(file)`, `exportZip(project)`                                                                                                                                                                               |
+| `lib/zip`              | Read a plugin or theme zip as untrusted input: path checks, size limits, type detection            | `readProjectZip(bytes, fileName)` → `Result<ProjectZip, ZipImportError>`; `ZIP_LIMITS`                                                                                                                                |
+| `features/projects`    | Upload button (now); project list and export (Phase 7)                                             | `<UploadProjectButton />` (shown through `Workspace`'s `headerActions` slot), `importSummary(project)`                                                                                                                |
 | `features/sharing`     | Encode/decode share links                                                                          | `encodeShare(project)`, `decodeShare(hash)`                                                                                                                                                                           |
 
 ### Composition

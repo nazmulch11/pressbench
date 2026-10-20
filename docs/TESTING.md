@@ -169,7 +169,8 @@ To reproduce CI's Linux browsers on a Mac, run the suite in Playwright's officia
 docker run --rm --ipc=host -v "$PWD":/src:ro mcr.microsoft.com/playwright:v1.64.1-noble bash -lc 'mkdir /work && cd /src && tar --exclude=./node_modules --exclude=./.git -cf - . | (cd /work && tar -xf -) && cd /work && npm ci && CI=1 npx playwright test --repeat-each=3'
 ```
 
-Keep the image tag equal to the `@playwright/test` version.
+Keep the image tag equal to the `@playwright/test` version. Booting WordPress needs memory: if Docker's VM has little free (a WebKit
+"Target crashed" in the Playground tests is the sign), add `--workers=2`. GitHub's runners have enough.
 
 ## 6. Shared E2E guards
 
