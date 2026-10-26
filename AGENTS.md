@@ -83,8 +83,9 @@ For bugs: reproduce → add a regression test case → failing test → fix → 
 - Do not commit secrets, `.env` files, test videos or `test-results/`.
 - Keep ESLint on 9.x for now: `eslint-plugin-react` and `eslint-plugin-jsx-a11y` do not support ESLint 10 yet.
 - Record phase exit-gate runs in `docs/test-runs/`, including what could not be run and why.
-- The project has no licence yet (`UNLICENSED`). Do not add a `LICENSE` file or licence headers until the owner
-  decides.
+- The licence is `AGPL-3.0-or-later` ([NOTICE.md](NOTICE.md)). Do not add dependencies whose licence is
+  incompatible with it (for example GPL-2.0-only, SSPL, proprietary or non-commercial). Code Pressbench puts in
+  users' projects must stay usable under GPL-2.0-or-later. Source files need no licence headers.
 
 ## Definition of done
 

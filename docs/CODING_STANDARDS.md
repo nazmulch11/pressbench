@@ -115,7 +115,7 @@ Code Pressbench generates for users must be exemplary, because users copy it.
 - Escape on output (`esc_html`, `esc_attr`, `esc_url`, `wp_kses_post`), sanitize on input, nonces and capability
   checks on every form and AJAX/REST handler.
 - Text domain matches the slug; all user-facing strings are translatable.
-- Licence header `GPL-2.0-or-later` by default.
+- Licence header `GPL-2.0-or-later` by default (allowed by the additional permission in `NOTICE.md`).
 - CI runs PHPCS (`WordPress` standard) and Plugin Check on every template output (TC-SC-008).
 
 ## 10. Formatting and linting

@@ -9,4 +9,7 @@ Thanks for helping build Pressbench.
 4. Follow [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md).
 5. Open a pull request and complete every item in the template.
 
+By contributing, you agree that your contribution is licensed under `AGPL-3.0-or-later` with the additional
+permission in [NOTICE.md](NOTICE.md).
+
 Bugs: use [docs/templates/bug-report.md](docs/templates/bug-report.md) and follow [docs/DEBUGGING.md](docs/DEBUGGING.md).

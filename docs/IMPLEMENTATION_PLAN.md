@@ -238,7 +238,7 @@ Built 2026-10-20 (branch `feat/editor`). Decisions and leftovers:
   script chunks and TypeScript does not type a megabyte of literal data.
 - `php-stubs/wordpress-stubs` is a Composer package; `scripts/generate-wp-data.ts` downloads the pinned tag
   (`scripts/wp-data/sources.ts`) into `scripts/.cache/`. `@wp-hooks/wordpress-core` is a dev dependency
-  (GPL-3.0-or-later; the owner should weigh that before choosing a licence, see README).
+  (GPL-3.0-or-later, compatible with the project's AGPL-3.0-or-later licence).
 - Formatting uses Prettier standalone in `src/lib/format` for JS, JSX, TS, TSX, CSS, SCSS and JSON with
   WordPress-style options; PHP shows a notice. Bound to Shift+Alt+F and the "Format document" command.
 - Ctrl/Cmd+K and Ctrl/Cmd+S are Monaco actions as well as shell shortcuts, because Monaco swallows Ctrl/Cmd+K
@@ -420,12 +420,12 @@ Update this table whenever test cases are added or automated. CI's `npm run docs
 
 ## 7. Risks
 
-| Risk                                                                | Impact                                               | Mitigation                                                                                                     |
-| ------------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Playground behaviour differs between browsers (OPFS, memory)        | Features break in one browser                        | Phase 1 spike in all three browsers; E2E on all three for every change                                         |
-| Browser storage cleared by the browser                              | Lost work                                            | Export button, quota warning, cloud sync in V2                                                                 |
-| Playground API changes                                              | Breakage on upgrade                                  | Single wrapper module, pinned versions, upgrade checklist in UPDATING.md                                       |
-| No full PHP language server in the browser                          | Weaker autocomplete                                  | Generated WordPress data in MVP; Phase 3 spike recorded in ADR 0002                                            |
-| Flaky E2E tests hide real bugs                                      | False confidence                                     | 3× repeat rule, flake policy in TESTING.md                                                                     |
-| Overlap with my.WordPress.net                                       | Weak positioning                                     | Stay focused on developer jobs: testing, standards, shipping                                                   |
-| Licence not yet chosen; `@wp-playground/client` is GPL-2.0-or-later | A closed licence may conflict with bundling GPL code | `package.json` is `private` / `UNLICENSED` until decided; decide (with legal advice) before any public release |
+| Risk                                                         | Impact                                                 | Mitigation                                                                                                                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Playground behaviour differs between browsers (OPFS, memory) | Features break in one browser                          | Phase 1 spike in all three browsers; E2E on all three for every change                                                                           |
+| Browser storage cleared by the browser                       | Lost work                                              | Export button, quota warning, cloud sync in V2                                                                                                   |
+| Playground API changes                                       | Breakage on upgrade                                    | Single wrapper module, pinned versions, upgrade checklist in UPDATING.md                                                                         |
+| No full PHP language server in the browser                   | Weaker autocomplete                                    | Generated WordPress data in MVP; Phase 3 spike recorded in ADR 0002                                                                              |
+| Flaky E2E tests hide real bugs                               | False confidence                                       | 3× repeat rule, flake policy in TESTING.md                                                                                                       |
+| Overlap with my.WordPress.net                                | Weak positioning                                       | Stay focused on developer jobs: testing, standards, shipping                                                                                     |
+| Licence conflicts with GPL dependencies (`@wp-playground/*`) | A closed licence would conflict with bundling GPL code | Decided 2026-10-27: AGPL-3.0-or-later, compatible with GPL-2.0-or-later and GPL-3.0-or-later; template output under GPL-2.0-or-later (NOTICE.md) |
