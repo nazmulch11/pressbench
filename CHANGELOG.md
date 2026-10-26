@@ -7,6 +7,10 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Licence: Pressbench is now `AGPL-3.0-or-later` (`LICENSE`, `package.json`). `NOTICE.md` adds a permission to use
+  code Pressbench puts in users' projects under GPL-2.0-or-later, keeps the name and logo out of the licence, and
+  lists third-party licences. The plan's licence risk is closed.
+
 - "Upload plugin or theme" in the header: choose a WordPress plugin or theme `.zip` and its folder appears in the
   file tree, expanded, with its main file open. The type is detected from the `Plugin Name:` or `Theme Name:`
   header. The zip is treated as untrusted. Absolute, `..`, backslash, Windows-reserved, empty, over-long, deeply

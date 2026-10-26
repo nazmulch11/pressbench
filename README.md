@@ -64,6 +64,10 @@ npm run test:e2e:repeat
 
 ## Licence
 
-Not chosen yet. Until then the project is private and all rights are reserved (`"license": "UNLICENSED"` in
-`package.json`). WordPress Playground, which Pressbench builds on, is GPL-2.0-or-later; take that into account, with
-legal advice, before choosing. Generated plugin and theme code defaults to GPL-2.0-or-later.
+Pressbench is free software under the [GNU Affero General Public License v3.0 or later](LICENSE)
+(`AGPL-3.0-or-later`). You may use, study, change and share it. If you share a modified version, or run one on a
+server that other people use, you must offer them its full source code under the same licence.
+
+Code that Pressbench puts in your project (starter files, templates, snippets, the demo project) may be used under
+GPL-2.0-or-later instead, so your plugins and themes can use the same licence as WordPress. Your own code is yours.
+The name "Pressbench" and its logo are not covered by the licence. See [NOTICE.md](NOTICE.md) for the details.
