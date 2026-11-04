@@ -93,7 +93,8 @@ vi.mock('@monaco-editor/react', () => ({
     world.setValue(props.value);
     if (!world.models.has(props.path)) {
       world.models.set(props.path, {
-        uri: { path: props.path.replace('file://', '') },
+        // Decoded like Monaco's `Uri.parse(…).path`: a raw `#` would start a fragment, `%20` would become a space.
+        uri: { path: lenientDecode(new URL(props.path).pathname) },
         dispose: vi.fn(),
         getValue: () => world.getValue(),
         getFullModelRange: () => 'full-range',
@@ -115,6 +116,17 @@ vi.mock('@monaco-editor/react', () => ({
     );
   },
 }));
+
+/** Decodes valid `%XX` runs and leaves a stray `%` alone, as Monaco's `Uri.parse` does. */
+function lenientDecode(path: string): string {
+  return path.replace(/(?:%[0-9a-f]{2})+/gi, (encoded) => {
+    try {
+      return decodeURIComponent(encoded);
+    } catch {
+      return encoded;
+    }
+  });
+}
 
 function renderEditor(): { store: WorkspaceStore; user: ReturnType<typeof userEvent.setup> } {
   const store = createWorkspaceStore();
@@ -226,6 +238,27 @@ describe('CodeEditor', () => {
       store.getState().removeEntry('my-plugin');
     });
     expect(model('my-plugin/my-plugin.php')?.dispose).toHaveBeenCalled();
+  });
+
+  it('TC-ED-019d disposes the model of a closed file whose name has a # or %', async () => {
+    const { store } = renderEditor();
+    const paths = ['my-plugin/notes#1.txt', 'my-plugin/100%.txt'];
+    for (const path of paths) {
+      store.getState().fs.write(path, path);
+      act(() => {
+        store.getState().openFile(path);
+      });
+      await editor(path);
+    }
+    const models = [...world.models.values()];
+    expect(models.map((model) => model.uri.path)).toEqual(paths.map((path) => `/${path}`));
+
+    act(() => {
+      store.getState().closeTab('my-plugin/notes#1.txt');
+    });
+
+    expect(models[0]?.dispose).toHaveBeenCalledTimes(1);
+    expect(models[1]?.dispose).not.toHaveBeenCalled();
   });
 
   it('TC-ED-019b formats a CSS file from a palette request and explains when a file cannot be formatted', async () => {

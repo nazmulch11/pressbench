@@ -405,16 +405,16 @@ Update this table whenever test cases are added or automated. CI's `npm run docs
 | Area        | Test case file    | Prefix | Cases planned | Manual by design | Automated so far |
 | ----------- | ----------------- | ------ | ------------- | ---------------- | ---------------- |
 | Foundation  | 00-foundation.md  | TC-FND | 11            | 1                | 10               |
-| Playground  | 01-playground.md  | TC-PG  | 14            | 0                | 14               |
-| Workspace   | 02-workspace.md   | TC-WS  | 25            | 0                | 25               |
-| Editor      | 03-editor.md      | TC-ED  | 25            | 0                | 25               |
+| Playground  | 01-playground.md  | TC-PG  | 15            | 0                | 15               |
+| Workspace   | 02-workspace.md   | TC-WS  | 26            | 0                | 26               |
+| Editor      | 03-editor.md      | TC-ED  | 28            | 0                | 28               |
 | Runtime     | 04-runtime.md     | TC-RT  | 9             | 0                | 0                |
 | Scaffolding | 05-scaffolding.md | TC-SC  | 9             | 0                | 0                |
 | Debug panel | 06-debug-panel.md | TC-DBG | 7             | 0                | 0                |
 | Projects    | 07-projects.md    | TC-PRJ | 17            | 1                | 10               |
 | Sharing     | 08-sharing.md     | TC-SH  | 5             | 0                | 0                |
 | Hardening   | 09-hardening.md   | TC-HD  | 7             | 4                | 0                |
-| **Total**   |                   |        | **129**       | **6**            | **84**           |
+| **Total**   |                   |        | **134**       | **6**            | **89**           |
 
 ---
 

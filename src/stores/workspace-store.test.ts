@@ -156,6 +156,49 @@ describe('workspace store: tabs follow the project', () => {
   });
 });
 
+describe('workspace store: tree selection and close prompt follow the project', () => {
+  it('TC-WS-026 keeps the tree selection on a renamed or moved entry and clears it on delete', () => {
+    const store = makeStore();
+    store.getState().setTreeSelection('plugin/inc/class-a.php');
+
+    store.getState().renameEntry('plugin/inc', 'includes');
+    expect(store.getState().treeSelection).toBe('plugin/includes/class-a.php');
+    store.getState().moveEntry('plugin/includes/class-a.php', 'plugin');
+    expect(store.getState().treeSelection).toBe('plugin/class-a.php');
+    store.getState().removeEntry('plugin/readme.txt');
+    expect(store.getState().treeSelection).toBe('plugin/class-a.php');
+    store.getState().removeEntry('plugin');
+    expect(store.getState().treeSelection).toBeNull();
+  });
+
+  it('TC-WS-026a New file from the palette goes into a folder renamed while it was selected', async () => {
+    const { WORKSPACE_COMMANDS } = await import('@/features/workspace');
+    const newFile = WORKSPACE_COMMANDS.find((command) => command.id === 'file.new');
+    const store = makeStore();
+    store.getState().setTreeSelection('plugin/inc');
+
+    store.getState().renameEntry('plugin/inc', 'includes');
+    newFile?.run(store.getState());
+
+    expect(store.getState().treeRequest).toMatchObject({
+      kind: 'new-file',
+      parent: 'plugin/includes',
+    });
+  });
+
+  it('TC-WS-026b the close prompt follows a renamed file and goes away when the file is deleted', () => {
+    const store = makeStore();
+    store.getState().openFile('plugin/readme.txt');
+    store.getState().setDraft('plugin/readme.txt', 'edited');
+    store.getState().closeTab('plugin/readme.txt');
+
+    store.getState().renameEntry('plugin', 'renamed');
+    expect(store.getState().closing).toBe('renamed/readme.txt');
+    store.getState().removeEntry('renamed/readme.txt');
+    expect(store.getState().closing).toBeNull();
+  });
+});
+
 describe('workspace store: tabs', () => {
   it('TC-WS-021e opens a file once, activates it, and picks the neighbour when closing', () => {
     const store = makeStore();

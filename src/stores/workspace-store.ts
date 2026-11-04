@@ -125,15 +125,23 @@ export function createWorkspaceStore(options: WorkspaceStoreOptions = {}): Works
 
   const store = createStore<WorkspaceState>()((set, get) => {
     const removeTabs = (removed: string): void => {
-      const { tabs, activeTab, drafts } = get();
-      const survivors = tabs.filter((tab) => tab !== removed && !isAncestor(removed, tab));
+      const { tabs, activeTab, drafts, closing, treeSelection } = get();
+      const isGone = (path: string | null): boolean =>
+        path !== null && (path === removed || isAncestor(removed, path));
+      const survivors = tabs.filter((tab) => !isGone(tab));
       let nextActive = activeTab;
       if (activeTab !== null && !survivors.includes(activeTab)) {
         const closedIndex = tabs.indexOf(activeTab);
         nextActive =
           survivors.find((tab) => tabs.indexOf(tab) > closedIndex) ?? survivors.at(-1) ?? null;
       }
-      set({ tabs: survivors, activeTab: nextActive, drafts: dropDrafts(drafts, removed) });
+      set({
+        tabs: survivors,
+        activeTab: nextActive,
+        drafts: dropDrafts(drafts, removed),
+        closing: isGone(closing) ? null : closing,
+        treeSelection: isGone(treeSelection) ? null : treeSelection,
+      });
     };
 
     /** True while an import writes many files: the file list is refreshed once at the end instead. */
@@ -141,12 +149,15 @@ export function createWorkspaceStore(options: WorkspaceStoreOptions = {}): Works
 
     const applyChange = (change: FsChange): void => {
       if (change.type === 'rename') {
-        const { tabs, activeTab, drafts } = get();
+        const { tabs, activeTab, drafts, closing, treeSelection } = get();
+        const remap = (path: string | null): string | null =>
+          path === null ? null : (remapPath(path, change.from, change.to) ?? path);
         set({
           tabs: tabs.map((tab) => remapPath(tab, change.from, change.to) ?? tab),
-          activeTab:
-            activeTab === null ? null : (remapPath(activeTab, change.from, change.to) ?? activeTab),
+          activeTab: remap(activeTab),
           drafts: remapDrafts(drafts, change.from, change.to),
+          closing: remap(closing),
+          treeSelection: remap(treeSelection),
         });
       } else if (change.type === 'remove') {
         removeTabs(change.path);

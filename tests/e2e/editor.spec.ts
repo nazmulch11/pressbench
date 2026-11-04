@@ -179,4 +179,33 @@ test.describe('editor', () => {
 
     await a11y.check();
   });
+
+  test('TC-ED-026 files whose names only differ by percent-encoding keep separate buffers and undo', async ({
+    page,
+    workspace,
+  }) => {
+    await workspace.goto('/?debug=1');
+    await workspace.writeFile('my-plugin/notes 1.txt', 'first file');
+    await workspace.writeFile('my-plugin/notes%201.txt', 'second file');
+
+    await workspace.openInEditor('notes 1.txt');
+    await workspace.focusEditorEnd();
+    await page.keyboard.type(' one');
+    await expect.poll(() => workspace.draft('my-plugin/notes 1.txt')).toBe('first file one');
+    await workspace.openInEditor('notes%201.txt');
+    await expect(workspace.monaco.locator('.view-lines')).toHaveText('second file');
+    await workspace.focusEditorEnd();
+    await page.keyboard.type(' two');
+    await expect.poll(() => workspace.draft('my-plugin/notes%201.txt')).toBe('second file two');
+
+    await workspace.tab('notes 1.txt, unsaved').click();
+    await expect(workspace.monaco.locator('.view-lines')).toHaveText('first file one');
+    await workspace.focusEditorEnd();
+    await page.keyboard.press('ControlOrMeta+z');
+
+    // Undo only reaches back into this file's own history: the typed word goes, the other file never appears.
+    await expect(workspace.monaco.locator('.view-lines')).toHaveText('first file');
+    await expect.poll(() => workspace.draft('my-plugin/notes 1.txt')).toBeUndefined();
+    await expect.poll(() => workspace.draft('my-plugin/notes%201.txt')).toBe('second file two');
+  });
 });

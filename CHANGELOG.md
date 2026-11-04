@@ -118,6 +118,20 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Editor: files whose names only differ by percent-encoding, such as `notes 1.txt` and `notes%201.txt`, shared one
+  Monaco model, so undo in one could bring in the other file's text and turn it into an unsaved draft. A `#` in a
+  name cut the model's path short, so its model was never disposed when the tab closed. Model URIs now
+  percent-encode each path segment (TC-ED-026, TC-ED-027).
+- Editor: when the Monaco chunk cannot be loaded (for example after a deploy replaced it) or the editor throws, the
+  editor slot shows an alert and the rest of the workspace keeps working. Before, the whole app went blank and the
+  in-memory project was lost (TC-ED-028).
+- Playground: `dispose()` during a boot let the runtime that was starting report `ready` and become the live one. A
+  cancelled boot now disposes its connection and returns `boot-failed` "WordPress start was cancelled"; a boot
+  started afterwards is the one left running, and a reboot cancelled while the old runtime shuts down never
+  connects (TC-PG-015). The browser connection has no `dispose` yet, so its iframe is only torn down by the next boot.
+- Workspace: the tree selection and the close prompt now follow a rename or move and are cleared when their entry
+  is deleted. "New file" from the palette after moving the selected folder (Move to… or drag) went to the project
+  root (TC-WS-026).
 - The dev server no longer watches `coverage/`, `playwright-report/`, `test-results/` or `blob-report/`. Running the
   tests rewrote the HTML reports there, which reloaded the open app and wiped the in-memory project and WordPress,
   including an uploaded plugin (TC-FND-011). The ignore paths use forward slashes, so this also holds on Windows.

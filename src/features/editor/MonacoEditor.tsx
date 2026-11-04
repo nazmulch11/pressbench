@@ -7,6 +7,7 @@ import { useWorkspaceStore, useWorkspaceStoreApi } from '@/stores';
 import styles from './CodeEditor.module.css';
 import { registerEditorActions } from './editor-actions';
 import { languageForPath } from './languages';
+import { modelUri } from './model-uri';
 import './monaco-environment';
 import { useColorScheme } from './useColorScheme';
 import { useEditorRequests } from './useEditorRequests';
@@ -18,11 +19,6 @@ type CodeEditorInstance = Monaco.editor.IStandaloneCodeEditor;
 
 const DATA_NOTICE =
   'WordPress function and hook data could not be loaded, so completion and hover docs are off. Reload the page to try again.';
-
-/** `file:///my-plugin/my-plugin.php`: one Monaco model per open project file. */
-function modelUri(path: string): string {
-  return `file:///${path}`;
-}
 
 /**
  * The Monaco editor over the active tab. Loaded lazily through `CodeEditor`; reads drafts from the workspace
