@@ -91,6 +91,15 @@ export class WorkspacePage {
       .toBe(true);
   }
 
+  /**
+   * Presses an editor shortcut with the modifier Monaco binds: Cmd when the browser reports macOS, else Ctrl.
+   * `ControlOrMeta` follows the host instead, which differs for WebKit on Linux (it sends a Mac user agent).
+   */
+  async pressEditorShortcut(key: string): Promise<void> {
+    const isMac = await this.page.evaluate(() => navigator.userAgent.includes('Macintosh'));
+    await this.page.keyboard.press(`${isMac ? 'Meta' : 'Control'}+${key}`);
+  }
+
   /** The unsaved draft of a file from the store; needs `?debug=1`. */
   async draft(path: string): Promise<string | undefined> {
     return this.page.evaluate(

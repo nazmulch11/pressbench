@@ -201,7 +201,7 @@ test.describe('editor', () => {
     await workspace.tab('notes 1.txt, unsaved').click();
     await expect(workspace.monaco.locator('.view-lines')).toHaveText('first file one');
     await workspace.focusEditorEnd();
-    await page.keyboard.press('ControlOrMeta+z');
+    await workspace.pressEditorShortcut('z');
 
     // Undo only reaches back into this file's own history: the typed word goes, the other file never appears.
     await expect(workspace.monaco.locator('.view-lines')).toHaveText('first file');
