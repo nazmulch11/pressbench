@@ -84,6 +84,10 @@ function ioError(error: unknown): PlaygroundError {
 }
 
 const NOT_BOOTED: PlaygroundError = { kind: 'not-booted', message: 'WordPress is not running' };
+const CANCELLED: PlaygroundError = {
+  kind: 'boot-failed',
+  message: 'WordPress start was cancelled',
+};
 
 /**
  * Creates a `PlaygroundService` over a Playground client. See `createWebPlaygroundService` for the browser and
@@ -94,6 +98,8 @@ export function createPlaygroundService(deps: ServiceDependencies): PlaygroundSe
   const listeners = new Set<(state: PlaygroundState) => void>();
   let state: PlaygroundState = { status: 'idle' };
   let connection: Connection | undefined;
+  /** Counts boots and disposals; a boot that finds it changed was cancelled while it waited. */
+  let generation = 0;
 
   function setState(next: PlaygroundState): void {
     state = next;
@@ -162,21 +168,44 @@ export function createPlaygroundService(deps: ServiceDependencies): PlaygroundSe
       const versions = { ...DEFAULT_VERSIONS, ...options.versions };
       const started = now();
       const previous = connection;
+      generation += 1;
+      const attempt = generation;
       connection = undefined;
       setState({ status: 'booting' });
       log.info('boot requested', { versions, persist: options.persist ?? false });
+      let connected: Connection;
       try {
         await previous?.dispose?.();
-        connection = await deps.connect({ ...options, versions });
+        if (attempt !== generation) {
+          return err(CANCELLED);
+        }
+        connected = await deps.connect({ ...options, versions });
       } catch (error: unknown) {
+        if (attempt !== generation) {
+          return err(CANCELLED);
+        }
         const failure: PlaygroundError = { kind: 'boot-failed', message: toMessage(error) };
         log.error('boot failed', { message: failure.message });
         setState({ status: 'error', error: failure });
         return err(failure);
       }
+      if (attempt !== generation) {
+        // `dispose` (or a newer boot) ran while this runtime started: it must not stay alive unseen.
+        log.info('boot cancelled');
+        try {
+          await connected.dispose?.();
+        } catch (error: unknown) {
+          log.warn('cancelled runtime did not shut down', { message: toMessage(error) });
+        }
+        return err(CANCELLED);
+      }
+      connection = connected;
       const bootMs = now() - started;
       const reported = await getVersions();
-      const persistence = connection.persistence ?? { mode: 'off' };
+      if (attempt !== generation) {
+        return err(CANCELLED);
+      }
+      const persistence = connected.persistence ?? { mode: 'off' };
       const info: ReadyInfo = {
         bootMs,
         versions: reported.ok ? reported.value : versions,
@@ -272,6 +301,7 @@ export function createPlaygroundService(deps: ServiceDependencies): PlaygroundSe
 
     async dispose() {
       const current = connection;
+      generation += 1;
       connection = undefined;
       setState({ status: 'idle' });
       await current?.dispose?.();

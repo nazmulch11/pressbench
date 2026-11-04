@@ -264,6 +264,132 @@ describe('createPlaygroundService', () => {
     expect(service.state.status).toBe('ready');
   });
 
+  it('TC-PG-015 dispose while booting shuts down the runtime that was starting', async () => {
+    const dispose = vi.fn().mockResolvedValue(undefined);
+    const releases: (() => void)[] = [];
+    const service = createPlaygroundService({
+      connect: () =>
+        new Promise((resolve) => {
+          releases.push(() => {
+            resolve({ php: fakePhpClient(), dispose });
+          });
+        }),
+    });
+
+    const cancelled = service.boot();
+    await vi.waitFor(() => {
+      expect(releases).toHaveLength(1);
+    });
+    await service.dispose();
+    releases[0]?.();
+
+    expect(await cancelled).toEqual({
+      ok: false,
+      error: { kind: 'boot-failed', message: 'WordPress start was cancelled' },
+    });
+    expect(dispose).toHaveBeenCalledOnce();
+    expect(service.state.status).toBe('idle');
+    expect(await service.readFile('/a.txt')).toEqual({
+      ok: false,
+      error: { kind: 'not-booted', message: 'WordPress is not running' },
+    });
+  });
+
+  it('TC-PG-015a a boot started after a cancelled one is the one that ends up running', async () => {
+    const disposals: string[] = [];
+    const releases: (() => void)[] = [];
+    const service = createPlaygroundService({
+      connect: () =>
+        new Promise((resolve) => {
+          const name = `connection ${String(releases.length + 1)}`;
+          releases.push(() => {
+            resolve({
+              php: fakePhpClient(new Map([['/name.txt', name]])),
+              dispose: () => {
+                disposals.push(name);
+                return Promise.resolve();
+              },
+            });
+          });
+        }),
+    });
+
+    const first = service.boot();
+    await vi.waitFor(() => {
+      expect(releases).toHaveLength(1);
+    });
+    await service.dispose();
+    const second = service.boot();
+    await vi.waitFor(() => {
+      expect(releases).toHaveLength(2);
+    });
+    releases[1]?.();
+    expect((await second).ok).toBe(true);
+    releases[0]?.();
+    expect((await first).ok).toBe(false);
+
+    expect(disposals).toEqual(['connection 1']);
+    expect(service.state.status).toBe('ready');
+    expect(await service.readFile('/name.txt')).toEqual({ ok: true, value: 'connection 2' });
+  });
+
+  it('TC-PG-015b a boot cancelled while the old runtime shuts down never starts a new one', async () => {
+    let finishOldDispose: (() => void) | undefined;
+    const connect = vi.fn(() =>
+      Promise.resolve<Connection>({
+        php: fakePhpClient(),
+        dispose: () =>
+          new Promise<void>((resolve) => {
+            finishOldDispose = resolve;
+          }),
+      }),
+    );
+    const service = createPlaygroundService({ connect });
+    await service.boot();
+
+    const reboot = service.boot();
+    await vi.waitFor(() => {
+      expect(finishOldDispose).toBeDefined();
+    });
+    const disposing = service.dispose();
+    finishOldDispose?.();
+    await disposing;
+
+    expect(await reboot).toEqual({
+      ok: false,
+      error: { kind: 'boot-failed', message: 'WordPress start was cancelled' },
+    });
+    expect(connect).toHaveBeenCalledOnce();
+    expect(service.state.status).toBe('idle');
+  });
+
+  it('TC-PG-015c a cancelled runtime that fails to shut down still gives a result', async () => {
+    let release: (() => void) | undefined;
+    const service = createPlaygroundService({
+      connect: () =>
+        new Promise((resolve) => {
+          release = () => {
+            resolve({
+              php: fakePhpClient(),
+              dispose: () => Promise.reject(new Error('iframe gone')),
+            });
+          };
+        }),
+    });
+
+    const cancelled = service.boot();
+    await vi.waitFor(() => {
+      expect(release).toBeDefined();
+    });
+    await service.dispose();
+    release?.();
+
+    expect(await cancelled).toEqual({
+      ok: false,
+      error: { kind: 'boot-failed', message: 'WordPress start was cancelled' },
+    });
+  });
+
   it('TC-PG-014m creates only the parent folder of the file it writes', async () => {
     const { service, php } = serviceOver();
     const mkdirTree = vi.spyOn(php, 'mkdirTree');
