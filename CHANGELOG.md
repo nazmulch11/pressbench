@@ -191,3 +191,5 @@ false`; with the default, Vite's preload helper landed in that chunk and the ent
 - `package.json` marked `private` and `UNLICENSED` until a licence is chosen.
 - Git hooks live in `scripts/git-hooks/` (Husky).
 - `PW_CHROMIUM_EXECUTABLE` and `PW_NO_VIDEO` environment switches for sandboxes with a pre-installed Chromium.
+- TC-PRJ-011g builds a 16 MB zip bomb instead of 64 MB: compressing the fixture took over 5 s on CI and timed the
+  test out. Without the early stop it still takes 16 inflate steps against the limit of 3.
