@@ -265,7 +265,7 @@ describe('readProjectZip with hostile archives', () => {
     const data = buildRawZip(
       [
         { name: 'p/p.php', method: 8, data: MAIN },
-        { name: 'p/bomb.txt', method: 8, data: new Uint8Array(64 * 1024 * 1024) },
+        { name: 'p/bomb.txt', method: 8, data: new Uint8Array(16 * 1024 * 1024) },
       ],
       [
         { name: 'p/p.php', local: 0 },
@@ -277,7 +277,7 @@ describe('readProjectZip with hostile archives', () => {
     const message = await refusal(data);
 
     expect(message).toBe('The zip is damaged: "p/bomb.txt" does not match its declared size.');
-    // 64 MB of zeros deflates to about 64 KB, which is 64 steps of 1 KB; stopping early takes only a few.
+    // 16 MB of zeros deflates to about 16 KB, which is 16 steps of 1 KB; stopping early takes only a few.
     // One push is the small main file, unpacked first.
     const bombPushes = push.mock.calls.length - 1;
     expect(bombPushes).toBeLessThanOrEqual(3);
