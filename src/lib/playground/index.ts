@@ -26,5 +26,10 @@ export type {
   ReadyInfo,
   RequestedVersions,
 } from './types';
-export { createWebPlaygroundService, DEFAULT_BOOT_TIMEOUT_MS, DEFAULT_REMOTE_URL } from './web';
+export {
+  createWebPlaygroundService,
+  DEFAULT_BOOT_TIMEOUT_MS,
+  DEFAULT_REMOTE_URL,
+  resolveRemoteUrl,
+} from './web';
 export type { WebServiceOptions } from './web';

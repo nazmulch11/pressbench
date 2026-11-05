@@ -49,6 +49,7 @@ export default defineEslintConfig(
       'playwright-report/',
       'blob-report/',
       'node_modules/',
+      'scripts/.cache/',
     ],
   },
 

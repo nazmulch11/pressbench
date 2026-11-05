@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 
 import { expect, test } from './fixtures/pressbench';
+import { LOCAL_REMOTE_URL } from '../../scripts/playground-remote/plan';
 import type { PlaygroundService } from '../../src/lib/playground';
 
 const HELLO_PLUGIN = `<?php
@@ -18,6 +19,8 @@ function pressbench_hello_notice() {
 `;
 
 const PERSISTENT_DIR = '/wordpress/wp-content/plugins/pressbench-spike';
+
+const LOCAL_REMOTE_ORIGIN = new URL(LOCAL_REMOTE_URL).origin;
 
 /** Whether `PERSISTENT_DIR` survives a reload in each engine (TC-PG-006). */
 const EXPECTED_PERSISTENCE: Record<string, 'on' | 'unavailable'> = {
@@ -99,7 +102,7 @@ async function startWordPress(
 }
 
 test.describe('playground spike', () => {
-  // Cold boots download WordPress and PHP from the hosted remote.
+  // Cold boots download WordPress and PHP from the local remote (docs/TESTING.md, "Playground remote in E2E").
   test.setTimeout(120_000);
 
   test.beforeEach(async ({ page }) => {
@@ -119,6 +122,21 @@ test.describe('playground spike', () => {
     expect(url).toEqual({ ok: true, value: '/' });
     expect(home).toMatchObject({ ok: true, value: { exitCode: 0 } });
     expect(home.ok && home.value.output.length).toBeGreaterThan(0);
+  });
+
+  test('TC-PG-017 boots from the local remote without contacting the public Playground hosts', async ({
+    page,
+    playgroundRequests,
+  }) => {
+    await startWordPress(page);
+
+    const remoteFrame = page.frames().find((frame) => frame.url().startsWith(LOCAL_REMOTE_ORIGIN));
+
+    expect(remoteFrame?.url().split('?')[0]).toBe(LOCAL_REMOTE_URL);
+    expect(playgroundRequests.local.map((url) => new URL(url).pathname)).toContain(
+      new URL(LOCAL_REMOTE_URL).pathname,
+    );
+    expect(playgroundRequests.public).toEqual([]);
   });
 
   test('TC-PG-002 writes and activates a plugin whose notice shows in wp-admin', async ({

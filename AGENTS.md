@@ -39,6 +39,7 @@ npm run test:e2e:repeat     # same, --repeat-each=3  (REQUIRED before you say a 
 npm run check               # lint + format check + typecheck + unit + coverage + docs check
 npm run docs:check          # links, test case IDs, test titles, traceability table
 npm run generate:wp-data    # regenerate WordPress function/hook data
+npm run playground:remote:build  # build the Playground remote E2E serves (Node 24; once per client version)
 ```
 
 If a command above does not exist yet (Phase 0 creates them), create it as described in the plan rather than
@@ -77,6 +78,8 @@ For bugs: reproduce → add a regression test case → failing test → fix → 
   capability checks, translatable strings.
 - Treat imported zips, share links and project files as untrusted input.
 - Do not add dependencies without stating why, size, licence and maintenance status in the summary.
+- E2E must never load `playground.wordpress.net` or `wpsandbox.wordpress.net` (CI got 429s); it uses the local remote
+  from `npm run playground:remote:build` (ADR 0003). A fixture fails tests that request the public hosts.
 - Do not upgrade `@wp-playground/*` together with anything else. Do not move TypeScript past what `typescript-eslint`
   supports.
 - Do not put "WordPress" in product names, package names or domains (trademark policy).

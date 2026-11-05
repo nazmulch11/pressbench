@@ -30,9 +30,46 @@ jobs:
       - run: npm run test:integration
       - run: npm run build
 
+  playground-remote:
+    # E2E boots WordPress from a Playground remote built for the pinned @wp-playground/client, never from the
+    # rate-limited public hosts (docs/adr/0003-self-hosted-playground-remote-for-tests.md). Built once per version.
+    name: Playground remote (build once per version)
+    runs-on: ubuntu-latest
+    outputs:
+      path: ${{ steps.plan.outputs.path }}
+      key: ${{ steps.plan.outputs.key }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: plan
+        run: |
+          version="$(node -p "require('./package.json').dependencies['@wp-playground/client']")"
+          echo "path=scripts/.cache/playground-remote/$version" >> "$GITHUB_OUTPUT"
+          echo "key=playground-remote-$version-${{ hashFiles('scripts/build-playground-remote.ts') }}" >> "$GITHUB_OUTPUT"
+      - id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ steps.plan.outputs.path }}
+          key: ${{ steps.plan.outputs.key }}
+          lookup-only: true
+      # Upstream's build needs Node 24 (engine-strict).
+      - if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+      - if: steps.cache.outputs.cache-hit != 'true'
+        run: npm run playground:remote:build
+      - if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ steps.plan.outputs.path }}
+          key: ${{ steps.plan.outputs.key }}
+
   e2e:
     name: E2E ${{ matrix.browser }} (3 runs)
-    needs: check
+    needs: [check, playground-remote]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -45,6 +82,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ needs.playground-remote.outputs.path }}
+          key: ${{ needs.playground-remote.outputs.key }}
+          fail-on-cache-miss: true
       - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: npx playwright test --project=${{ matrix.browser }} --repeat-each=3
       - uses: actions/upload-artifact@v4

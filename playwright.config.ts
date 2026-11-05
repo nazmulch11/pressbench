@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+import { LOCAL_REMOTE_URL } from './scripts/playground-remote/plan.ts';
+
 const isCI = Boolean(process.env.CI);
 
 // Some sandboxes ship a pre-installed Chromium instead of Playwright's download, without ffmpeg for video.
@@ -47,11 +49,22 @@ export default defineConfig({
     { name: 'firefox', use: { ...withoutUserAgent(devices['Desktop Firefox']) } },
     { name: 'webkit', use: { ...withoutUserAgent(devices['Desktop Safari']) } },
   ],
-  webServer: {
-    command: 'npm run build && npm run preview',
-    url: 'http://localhost:4173',
-    // Always build and serve fresh, so tests never run against an old build left running.
-    reuseExistingServer: false,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      // The Playground remote built for the pinned client (npm run playground:remote:build), so tests never hit
+      // the rate-limited public hosts. See docs/TESTING.md "Playground remote in E2E".
+      command: 'npm run playground:remote:serve',
+      url: LOCAL_REMOTE_URL,
+      reuseExistingServer: false,
+      timeout: 30_000,
+    },
+    {
+      command: 'npm run build && npm run preview',
+      url: 'http://localhost:4173',
+      env: { VITE_PLAYGROUND_REMOTE_URL: LOCAL_REMOTE_URL },
+      // Always build and serve fresh, so tests never run against an old build left running.
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+  ],
 });
