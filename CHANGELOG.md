@@ -191,3 +191,5 @@ false`; with the default, Vite's preload helper landed in that chunk and the ent
 - `package.json` marked `private` and `UNLICENSED` until a licence is chosen.
 - Git hooks live in `scripts/git-hooks/` (Husky).
 - `PW_CHROMIUM_EXECUTABLE` and `PW_NO_VIDEO` environment switches for sandboxes with a pre-installed Chromium.
+- `AGENTS.md`: e2e tests press Monaco shortcuts through `workspace.pressEditorShortcut`, because WebKit on Linux
+  reports a Mac user agent and Monaco binds Cmd there instead of Ctrl.
