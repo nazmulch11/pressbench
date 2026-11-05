@@ -16,6 +16,8 @@ export default mergeConfig(
         exclude: [
           'scripts/docs-check/cli.ts',
           'scripts/generate-wp-data.ts',
+          'scripts/build-playground-remote.ts',
+          'scripts/serve-playground-remote.ts',
           'scripts/**/*.test.ts',
           'src/main.tsx',
           'src/test/**',

@@ -69,7 +69,9 @@ project files move to Pressbench's own storage.
 
 ## Remote hosting decision
 
-**Use the hosted remote (`https://playground.wordpress.net/remote.html`) for the MVP.**
+**Use the hosted remote (`https://playground.wordpress.net/remote.html`) for the MVP.** E2E tests no longer use it:
+they boot a local build of the remote for the pinned client ([ADR 0003](0003-self-hosted-playground-remote-for-tests.md)),
+so the contract tests below now run against that build, not the live remote.
 
 Options considered:
 

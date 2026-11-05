@@ -13,6 +13,21 @@ const log = createLogger('playground');
  */
 export const DEFAULT_REMOTE_URL = 'https://playground.wordpress.net/remote.html';
 
+/**
+ * The remote named by the build's `VITE_PLAYGROUND_REMOTE_URL`, or the hosted one when it is unset. E2E builds point
+ * it at a local build of the pinned version (docs/adr/0003-self-hosted-playground-remote-for-tests.md).
+ */
+export function resolveRemoteUrl(configured: string | undefined): string {
+  if (configured === undefined || configured === '') {
+    return DEFAULT_REMOTE_URL;
+  }
+  const protocol = URL.canParse(configured) ? new URL(configured).protocol : '';
+  if (protocol !== 'http:' && protocol !== 'https:') {
+    throw new Error(`VITE_PLAYGROUND_REMOTE_URL must be an http(s) URL, got "${configured}"`);
+  }
+  return configured;
+}
+
 /** Where `PERSISTENT_DIR` lives inside the browser's origin-private file system. */
 const OPFS_PATH = '/pressbench/spike';
 
@@ -21,6 +36,7 @@ export const DEFAULT_BOOT_TIMEOUT_MS = 120_000;
 
 /** Options for the browser service. */
 export interface WebServiceOptions {
+  /** Defaults to `resolveRemoteUrl(import.meta.env.VITE_PLAYGROUND_REMOTE_URL)`. */
   readonly remoteUrl?: string;
   /** Called with the raw client once connected; debug mode exposes it on `window.__PRESSBENCH__.playground`. */
   readonly onClientConnected?: (client: PlaygroundClient) => void;
@@ -57,7 +73,8 @@ async function startClient(
   const { startPlaygroundWeb } = await import('@wp-playground/client');
   const client = await startPlaygroundWeb({
     iframe,
-    remoteUrl: options.remoteUrl ?? DEFAULT_REMOTE_URL,
+    // Resolved per boot, so a bad VITE_PLAYGROUND_REMOTE_URL shows as a boot failure with Retry, not a blank app.
+    remoteUrl: options.remoteUrl ?? resolveRemoteUrl(import.meta.env.VITE_PLAYGROUND_REMOTE_URL),
     blueprint: {
       preferredVersions: { php: versions.php ?? 'latest', wp: versions.wp ?? 'latest' },
       login: true,

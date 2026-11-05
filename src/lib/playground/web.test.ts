@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PERSISTENT_DIR } from './types';
-import { createWebPlaygroundService, DEFAULT_REMOTE_URL } from './web';
+import { createWebPlaygroundService, DEFAULT_REMOTE_URL, resolveRemoteUrl } from './web';
 
 const startPlaygroundWeb = vi.hoisted(() => vi.fn());
 
@@ -31,6 +31,10 @@ describe('createWebPlaygroundService', () => {
   beforeEach(() => {
     client = fakeClient();
     startPlaygroundWeb.mockReset().mockResolvedValue(client);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('TC-PG-013a boots the hosted remote with a Blueprint for the chosen versions', async () => {
@@ -149,6 +153,46 @@ describe('createWebPlaygroundService', () => {
       error: {
         kind: 'boot-failed',
         message: 'An iframe is required to start WordPress in the browser',
+      },
+    });
+    expect(startPlaygroundWeb).not.toHaveBeenCalled();
+  });
+
+  it('TC-PG-016a uses the hosted remote unless the build names another', () => {
+    expect(resolveRemoteUrl(undefined)).toBe(DEFAULT_REMOTE_URL);
+    expect(resolveRemoteUrl('')).toBe(DEFAULT_REMOTE_URL);
+    expect(resolveRemoteUrl('http://127.0.0.1:5400/remote.html')).toBe(
+      'http://127.0.0.1:5400/remote.html',
+    );
+  });
+
+  it('TC-PG-016b rejects a configured remote that is not an http(s) URL', () => {
+    expect(() => resolveRemoteUrl('ftp://x')).toThrow(/VITE_PLAYGROUND_REMOTE_URL/);
+    expect(() => resolveRemoteUrl('not a url')).toThrow(/VITE_PLAYGROUND_REMOTE_URL/);
+  });
+
+  it('TC-PG-016c boots the remote named by VITE_PLAYGROUND_REMOTE_URL', async () => {
+    vi.stubEnv('VITE_PLAYGROUND_REMOTE_URL', 'http://127.0.0.1:5400/remote.html');
+    const service = createWebPlaygroundService();
+
+    await service.boot({ iframe: document.createElement('iframe') });
+
+    expect(startPlaygroundWeb).toHaveBeenCalledWith(
+      expect.objectContaining({ remoteUrl: 'http://127.0.0.1:5400/remote.html' }),
+    );
+  });
+
+  it('TC-PG-016d reports a bad VITE_PLAYGROUND_REMOTE_URL as a boot failure', async () => {
+    vi.stubEnv('VITE_PLAYGROUND_REMOTE_URL', 'not a url');
+    const service = createWebPlaygroundService();
+
+    const result = await service.boot({ iframe: document.createElement('iframe') });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        kind: 'boot-failed',
+        message: expect.stringContaining('VITE_PLAYGROUND_REMOTE_URL') as unknown,
       },
     });
     expect(startPlaygroundWeb).not.toHaveBeenCalled();

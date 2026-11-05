@@ -41,7 +41,11 @@ Playground is the riskiest dependency. Upgrade it alone, never bundled with othe
 3. Run the Playground contract tests (TC-PG-*) on all three browsers, 3× each.
 4. Re-measure cold and warm boot; if either is >20% slower, note it in the PR and decide before merging.
 5. Check the list of supported WordPress and PHP versions; update the version picker options and their tests.
-6. If self-hosting the remote, deploy the matching remote version in the same release.
+6. Rebuild the E2E remote for the new version under Node 24 (`npm run playground:remote:build`) before step 3; CI
+   builds and caches it by itself, keyed on the client version (ADR 0003). Delete the old version's folder in
+   `scripts/.cache/playground-remote/`. If upstream changed where `npm run build:website` writes the site or which
+   Node it needs, update `scripts/build-playground-remote.ts` and the `playground-remote` CI job.
+7. If self-hosting the remote for users, deploy the matching remote version in the same release.
 
 ### Monaco
 

@@ -7,6 +7,14 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- E2E boots WordPress from a local build of the Playground remote instead of `playground.wordpress.net`, whose
+  rate limiting failed CI (a `429` on `wpsandbox.wordpress.net/sw.js` in run 41959770262). `npm run
+playground:remote:build` builds upstream's remote at the tag of the pinned `@wp-playground/client` (Node 24) into
+  `scripts/.cache/playground-remote/`; `npm run playground:remote:serve` serves it on `http://127.0.0.1:5400` and
+  Playwright starts it. The app reads the remote from `VITE_PLAYGROUND_REMOTE_URL` at build time; production builds
+  keep the hosted remote. A fixture fails any E2E test that requests the public Playground hosts. CI builds the
+  remote once per client version and caches it (ADR 0003; TC-PG-016 to 019).
+
 - Licence: Pressbench is now `AGPL-3.0-or-later` (`LICENSE`, `package.json`). `NOTICE.md` adds a permission to use
   code Pressbench puts in users' projects under GPL-2.0-or-later, keeps the name and logo out of the licence, and
   lists third-party licences. The plan's licence risk is closed.

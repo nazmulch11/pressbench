@@ -5,5 +5,5 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["scripts", "tests", "*.config.ts", "src/app/debug-globals.ts"]
+  "include": ["scripts", "tests", "*.config.ts", "src/app/debug-globals.ts", "src/vite-env.d.ts"]
 }

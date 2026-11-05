@@ -36,6 +36,8 @@ Aim for many unit tests, a solid set of component and integration tests, and E2E
 | `npx playwright show-report`                    | Open the last HTML report                                                    |
 | `npx playwright show-trace <trace.zip>`         | Step through a recorded failure                                              |
 | `npm run check`                                 | Lint + format check + typecheck + unit/component + coverage + docs check     |
+| `npm run playground:remote:build`               | Build the Playground remote E2E uses (once per client version, Node 24)      |
+| `npm run playground:remote:serve`               | Serve it on `http://127.0.0.1:5400` (Playwright starts it for you)           |
 
 ## 4. Writing tests
 
@@ -53,8 +55,8 @@ Aim for many unit tests, a solid set of component and integration tests, and E2E
 - No sleeps. In Playwright use web-first assertions (`await expect(locator).toBeVisible()`); in Vitest use fake timers.
 - Use role-based locators: `getByRole('button', { name: 'New file' })`. Add `data-testid` only when no accessible name
   exists, and treat that as an accessibility smell to fix.
-- Fixtures live in `tests/fixtures/`. Never depend on the network except the Playground remote, and mock that too in
-  tests that are not about Playground.
+- Fixtures live in `tests/fixtures/`. Never depend on the network. E2E uses a local build of the Playground remote
+  (section 5, "Playground remote in E2E"); mock Playground in tests that are not about it.
 
 ### Example: unit test
 
@@ -172,14 +174,41 @@ docker run --rm --ipc=host -v "$PWD":/src:ro mcr.microsoft.com/playwright:v1.64.
 Keep the image tag equal to the `@playwright/test` version. Booting WordPress needs memory: if Docker's VM has little free (a WebKit
 "Target crashed" in the Playground tests is the sign), add `--workers=2`. GitHub's runners have enough.
 
+### Playground remote in E2E
+
+E2E never loads the public Playground hosts (`playground.wordpress.net`, `wpsandbox.wordpress.net`): they rate-limit
+CI (a `429` on `wpsandbox.wordpress.net/sw.js` failed CI run 41959770262) and run a newer remote than the pinned
+client. Playwright instead starts a second web server, `npm run playground:remote:serve`, on `http://127.0.0.1:5400`
+and builds the app with `VITE_PLAYGROUND_REMOTE_URL` pointing at it. Why and what it costs:
+[ADR 0003](adr/0003-self-hosted-playground-remote-for-tests.md).
+
+The served folder, `scripts/.cache/playground-remote/<client version>/`, is built from upstream's source at the tag
+that matches `@wp-playground/client`. Build it once before your first E2E run, and again after upgrading Playground:
+
+```bash
+nvm use 24   # upstream's build needs Node 24.18 or later
+npm run playground:remote:build
+nvm use 22
+```
+
+The build clones about 2.6 GB into the system temp folder, installs about 1.4 GB of upstream dependencies, and
+deletes both when it is done. Without the folder, Playwright stops with "No Playground remote … Build it once".
+`127.0.0.1` is a different site from `localhost`, so the WordPress iframe stays third-party as in production. In CI
+the `playground-remote` job builds the folder once per client version and caches it.
+
+To try the local remote in the dev server, start `npm run playground:remote:serve` and run
+`VITE_PLAYGROUND_REMOTE_URL=http://127.0.0.1:5400/remote.html npm run dev`.
+
 ## 6. Shared E2E guards
 
 The custom fixture in `tests/e2e/fixtures/pressbench.ts` must:
 
 - Collect `console` messages of type `error` and `pageerror` events; fail the test at teardown if any appeared,
   except entries in an explicit, commented allow-list. The list currently has one entry: Firefox logs a
-  service-worker error from `playground.wordpress.net/sw.js` for a request with an empty URL inside the WordPress
-  iframe. It comes from the hosted remote, not from Pressbench.
+  service-worker error from the remote's `sw.js` for a request with an empty URL inside the WordPress iframe. It
+  comes from the Playground remote, not from Pressbench.
+- Record the browser context's requests and fail the test at teardown if any went to `playground.wordpress.net` or
+  `wpsandbox.wordpress.net` (TC-PG-017). Tests read the record through the `playgroundRequests` fixture.
 - Run axe (`@axe-core/playwright`) when a test calls `await a11y.check()`; fail on serious or critical issues.
 - Boot Playground once per worker where possible and reset state between tests, to keep runs fast.
 - Attach Pressbench's own logs (`window.__PRESSBENCH_LOGS__`, available when `?debug=1`) to the report on failure.
@@ -235,7 +264,9 @@ Lowering a threshold needs a written reason in the PR and an approving review.
 1. `npm ci`
 2. `npm run check`
 3. `npm run test:integration`
-4. `npx playwright install --with-deps chromium firefox webkit`
-5. `npm run test:e2e:repeat`
+4. `playground-remote` job: restore the Playground remote for the pinned client from the Actions cache, or build it
+   with `npm run playground:remote:build` under Node 24 and save it (ADR 0003)
+5. One E2E job per browser: restore the remote (the job fails on a cache miss), `npx playwright install --with-deps
+<browser>`, `npx playwright test --project=<browser> --repeat-each=3`
 6. Scaffold job: generate every template, run PHPCS with the WordPress standard and Plugin Check on the output
 7. Upload the Playwright HTML report and traces as artifacts on failure

@@ -6,7 +6,9 @@
 
 Everything runs in the developer's browser tab. There is no Pressbench server in the MVP; the only remote dependency
 is the Playground remote page, `https://playground.wordpress.net/remote.html`, hosted by WordPress.org (see
-[ADR 0001](adr/0001-browser-first-on-playground.md) for why it is not self-hosted in the MVP).
+[ADR 0001](adr/0001-browser-first-on-playground.md) for why it is not self-hosted in the MVP). E2E tests use a local
+build of the remote for the pinned client instead, chosen at build time with `VITE_PLAYGROUND_REMOTE_URL`
+([ADR 0003](adr/0003-self-hosted-playground-remote-for-tests.md)).
 
 ```mermaid
 flowchart LR
